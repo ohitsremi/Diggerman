@@ -11,7 +11,7 @@ void DiggerMan::move(StudentWorld * world)
 	switch (value)
 	{
 	case KEY_PRESS_DOWN:	moveTo(x, y - 1); break;
-	case KEY_PRESS_UP:		moveTo(x, y + 1); break;
+	case KEY_PRESS_UP:	moveTo(x, y + 1); break;
 	case KEY_PRESS_LEFT:	moveTo(x - 1, y); break;
 	case KEY_PRESS_RIGHT:	moveTo(x + 1, y); break;
 	case KEY_PRESS_SPACE:;
