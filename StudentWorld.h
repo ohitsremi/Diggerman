@@ -23,16 +23,40 @@ public:
 
 	virtual int init()
 	{
-		//Populate with Dirt, Boulder, Oil,Gold
-		for (size_t r = 0; r < dirt_field.size(); r++){
-			for (size_t c = 0; c < dirt_field[r].size(); c++)
-				if (c < 30 || c > 33)
-					//dirt_field[r][c] = std::unique_ptr<Dirt>(new Dirt(r, c));
-					dirt_field[r][c] = std::make_unique<Dirt>(r, c);
+		digger = std::make_shared<DiggerMan>();
+
+		for (size_t x = 0; x < dirt_field.size(); x++)
+			for (size_t y = 0; y < dirt_field[x].size(); y++)
+				if (y < 4 || (x < 30 || x > 33))
+					dirt_field[x][y] = std::make_unique<Dirt>(x, y);
+
+		for (int i = 0; i < std::min((int)getLevel() / 2 + 2, 7); i++)
+		{
+			int x = std::rand() % 60;
+			int y = std::rand() % 36 + 20;	//Between 20 and 56
+			if (isSafeDistanceAway(x, y))
+				roster.emplace_back(std::make_shared<Boulder>(x, y));
+			else
+				i--;
 		}
-		//How to enter in an Actor
-		roster.emplace_back(std::make_shared<Oil>(std::rand() % 64, std::rand() % 64));
-		//Shows total oil barrels on field
+		for (int i = 0; i < std::max(5 - ((int)getLevel() / 2), 2); i++)
+		{
+			int x = std::rand() % 60;
+			int y = std::rand() % 56;
+			if (isSafeDistanceAway(x, y))
+				roster.emplace_back(std::make_shared<Gold>(x, y));
+			else
+				i--;
+		}
+		for (int i = 0; i < std::min(2 + (int)getLevel(), 18); i++)
+		{
+			int x = std::rand() % 60;
+			int y = std::rand() % 56;
+			if (isSafeDistanceAway(x, y))
+				roster.emplace_back(std::make_shared<Oil>(x, y));
+			else
+				i--;
+		}
 		int oilCount = count_if(roster.begin(), roster.end(), [](std::shared_ptr<Actor> a)
 			{ return std::dynamic_pointer_cast<Oil>(a) != nullptr; }
 		);
@@ -53,12 +77,9 @@ public:
 			<< " Sonar: " << digger->getSonar() << " Oil Left :" << oilCount << " Scr: " << getScore();
 
 		setGameStatText(display.str());
-		digger->doSomething();
-		dig(digger->getX(), digger->getY());
+
 		for (std::shared_ptr<Actor> a : roster)
 			a->doSomething();
-		  // This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
-		  // Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
 		//decLives();
 		//return GWSTATUS_PLAYER_DIED;
 		return GWSTATUS_CONTINUE_GAME;
@@ -67,7 +88,10 @@ public:
 	virtual void cleanUp()
 	{
 		roster.clear();
-		//Free all actors
+		for (size_t r = 0; r < dirt_field.size(); r++)
+			for (size_t c = 0; c < dirt_field[r].size(); c++)
+				dirt_field[r][c].reset();
+		//Do something with DiggerMan
 	}
 
 	void dig(int x, int y)
@@ -76,6 +100,14 @@ public:
 		if (maxX > 64) maxX = 64;
 		if (maxY > 64) maxY = 64;
 		do do dirt_field[x][y].reset(); while (y < maxY); while (x < maxX);
+	}
+
+	bool isSafeDistanceAway(int x, int y)
+	{
+		for (std::shared_ptr<Actor> a : roster)
+			if(pow(abs(a->getX() - x), 2) + pow(abs(a->getY() - y), 2) <= 36)
+				return false;
+		return true;
 	}
 
 	std::string getStats(const int & oil)
@@ -88,9 +120,9 @@ public:
 	}
 
 private:
-	std::vector<std::shared_ptr<Actor>> roster;
+	std::vector<std::shared_ptr<Actor>> roster;	//maybe also have a 2d array of actor pointers
 	std::shared_ptr<DiggerMan> digger;
-	std::array<std::array<std::unique_ptr<Dirt>, 60>, 64> dirt_field;
+	std::array<std::array<std::unique_ptr<Dirt>, 64>, 60> dirt_field;
 };
 
 #endif // STUDENTWORLD_H_
