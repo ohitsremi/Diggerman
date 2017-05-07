@@ -27,7 +27,7 @@ public:
 
 		for (size_t x = 0; x < dirt_field.size(); x++)
 			for (size_t y = 0; y < dirt_field[x].size(); y++)
-				if (y < 4 || (x < 30 || x > 33))
+				if (y < 8 || (x < 30 || x > 33)) // modified to match his sample
 					dirt_field[x][y] = std::make_unique<Dirt>(x, y);
 
 		for (int i = 0; i < std::min((int)getLevel() / 2 + 2, 7); i++)
@@ -120,7 +120,7 @@ public:
 	}
 
 private:
-	std::vector<std::shared_ptr<Actor>> roster;	//maybe also have a 2d array of actor pointers
+	std::array<std::array<std::unique_ptr<Dirt>, 60>, 64> dirt_field;  // modified to match his sample
 	std::shared_ptr<DiggerMan> digger;
 	std::array<std::array<std::unique_ptr<Dirt>, 64>, 60> dirt_field;
 };
