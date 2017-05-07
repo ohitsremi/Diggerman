@@ -12,6 +12,12 @@ public:
 		Direction dir = right, double s = 1.0, 
 		unsigned int d = 0) : GraphObject(ID, x, y, dir, s, d) { setVisible(true); }	//Does an object below not need to be set to visible?
 	virtual void doSomething() = 0;
+	/*
+	StudentWorld *getWorld() {
+		StudentWorld* world_ptr = new ???; // Need to ask prof 
+		return world_ptr;
+	}
+	*/
 	virtual ~Actor() {}
 };
 
