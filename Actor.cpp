@@ -19,4 +19,25 @@ void DiggerMan::move(StudentWorld * world)
 	case KEY_PRESS_ESCAPE:;
 	}
 }
+/*
+void DiggerMan::doSomething()
+{
+	int value;
+	if (!isAlive())
+		return;
+	int x = getX(), y = getY();
+	if (getWorld()->getKey(value) == true){
+		switch (value)
+		{
+		case KEY_PRESS_DOWN:	moveTo(x, y - 1); break;
+		case KEY_PRESS_UP:	moveTo(x, y + 1); break;
+		case KEY_PRESS_LEFT:	moveTo(x - 1, y); break;
+		case KEY_PRESS_RIGHT:	moveTo(x + 1, y); break;
+		case KEY_PRESS_SPACE:;
+		case KEY_PRESS_TAB:;
+		case KEY_PRESS_ESCAPE:;
+		}
+	}
+}
+*/
 // Students:  Add code to this file (if you wish), Actor.h, StudentWorld.h, and StudentWorld.cpp
