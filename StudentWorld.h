@@ -17,19 +17,17 @@ class StudentWorld : public GameWorld
 {
 public:
 	StudentWorld(std::string assetDir)
-	 : GameWorld(assetDir)
+		: GameWorld(assetDir)
 	{
 	}
-
+	StudentWorld():GameWorld(""){}
 	virtual int init()
 	{
 		digger = std::make_shared<DiggerMan>();
-
 		for (size_t x = 0; x < dirt_field.size(); x++)
 			for (size_t y = 0; y < dirt_field[x].size(); y++)
 				if (y < 8 || (x < 30 || x > 33)) // modified to match his sample
 					dirt_field[x][y] = std::make_unique<Dirt>(x, y);
-
 		for (int i = 0; i < std::min((int)getLevel() / 2 + 2, 7); i++)
 		{
 			int x = std::rand() % 60;
@@ -58,7 +56,7 @@ public:
 				i--;
 		}
 		int oilCount = count_if(roster.begin(), roster.end(), [](std::shared_ptr<Actor> a)
-			{ return std::dynamic_pointer_cast<Oil>(a) != nullptr; }
+		{ return std::dynamic_pointer_cast<Oil>(a) != nullptr; }
 		);
 
 		setGameStatText(getStats(oilCount));
@@ -78,8 +76,11 @@ public:
 
 		setGameStatText(display.str());
 
-		for (std::shared_ptr<Actor> a : roster)
+		for (std::shared_ptr<Actor> a : roster) {
+			//std::cout << "here";
+			digger->move(this);
 			a->doSomething();
+		}
 		//decLives();
 		//return GWSTATUS_PLAYER_DIED;
 		return GWSTATUS_CONTINUE_GAME;
@@ -105,7 +106,7 @@ public:
 	bool isSafeDistanceAway(int x, int y)
 	{
 		for (std::shared_ptr<Actor> a : roster)
-			if(pow(abs(a->getX() - x), 2) + pow(abs(a->getY() - y), 2) <= 36)
+			if (pow(abs(a->getX() - x), 2) + pow(abs(a->getY() - y), 2) <= 36)
 				return false;
 		return true;
 	}
@@ -120,9 +121,9 @@ public:
 	}
 
 private:
-	std::array<std::array<std::unique_ptr<Dirt>, 60>, 64> dirt_field;  // modified to match his sample
+	std::vector<std::shared_ptr<Actor>> roster;	//maybe also have a 2d array of actor pointers
 	std::shared_ptr<DiggerMan> digger;
-	std::array<std::array<std::unique_ptr<Dirt>, 64>, 60> dirt_field;
+	std::array<std::array<std::unique_ptr<Dirt>, 60>, 64> dirt_field;  // modified to match his sample
 };
 
 #endif // STUDENTWORLD_H_
