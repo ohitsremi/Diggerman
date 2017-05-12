@@ -53,7 +53,8 @@ void DiggerMan::move(StudentWorld * world)
 		}
 		moveTo(x, y + 1);
 		break;
-
+	case KEY_PRESS_SPACE:
+		break;
 	}
 }
 /*
