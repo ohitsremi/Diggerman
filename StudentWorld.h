@@ -77,10 +77,11 @@ public:
 		setGameStatText(display.str());
 
 		for (std::shared_ptr<Actor> a : roster) {
-			//std::cout << "here";
-			digger->move(this);
 			a->doSomething();
 		}
+		digger->move(this);
+		dig(digger->getX(), digger->getY());
+		
 		//decLives();
 		//return GWSTATUS_PLAYER_DIED;
 		return GWSTATUS_CONTINUE_GAME;
@@ -95,12 +96,24 @@ public:
 		//Do something with DiggerMan
 	}
 
-	void dig(int x, int y)
+	void dig(int x, int y) //error "array subscript out of range????"
 	{
 		int maxX = x + 3, maxY = y + 3;
-		if (maxX > 64) maxX = 64;
-		if (maxY > 64) maxY = 64;
-		do do dirt_field[x][y].reset(); while (y < maxY); while (x < maxX);
+		
+		if (maxX > 59) maxX = 59;
+		if (maxY > 63) maxY = 63;
+		/*
+		if (dirt_field[maxX][maxY]->isVisible()) {
+			dirt_field[maxX][maxY]->setVisible(false);
+		}
+		*/
+		if (dirt_field[x][y])//returns true if not empty {
+			do {
+				do {
+					dirt_field[x][y].reset();
+				} while (y < maxY);
+			} while (x < maxX);
+		}
 	}
 
 	bool isSafeDistanceAway(int x, int y)
