@@ -10,37 +10,49 @@ void DiggerMan::move(StudentWorld * world)
 	int x = getX(), y = getY();
 	switch (value)
 	{
-			case KEY_PRESS_LEFT:
-				if (getDirection() != left) {
-					setDirection(left);
-					break;
-				}
-				moveTo(x - 1, y);
+	case KEY_PRESS_LEFT:
+		if (x <= 0) {
 			break;
+		}
+		if (getDirection() != left) {
+			setDirection(left);
+			break;
+		}
+		moveTo(x - 1, y);
+		break;
 
-			case KEY_PRESS_RIGHT:
-				if (getDirection() != right) {
-					setDirection(right);
-					break;
-				}
-				moveTo(x + 1, y);
-				break;
+	case KEY_PRESS_RIGHT:
+		if (x >= 60) {
+			break;
+		}
+		if (getDirection() != right) {
+			setDirection(right);
+			break;
+		}
+		moveTo(x + 1, y);
+		break;
 
-			case KEY_PRESS_DOWN:
-				if (getDirection() != down) {
-					setDirection(down);
-					break;
-				}
-				moveTo(x, y - 1);
-				break;
+	case KEY_PRESS_DOWN:
+		if (y <= 0) {
+			break;
+		}
+		if (getDirection() != down) {
+			setDirection(down);
+			break;
+		}
+		moveTo(x, y - 1);
+		break;
 
-			case KEY_PRESS_UP:
-				if (getDirection() != up) {
-					setDirection(up);
-					break;
-				}
-				moveTo(x, y + 1);
-				break;
+	case KEY_PRESS_UP:
+		if (y >= 60) {
+			break;
+		}
+		if (getDirection() != up) {
+			setDirection(up);
+			break;
+		}
+		moveTo(x, y + 1);
+		break;
 
 	}
 }
