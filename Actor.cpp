@@ -1,6 +1,11 @@
 #include "Actor.h"
 #include "StudentWorld.h"
-
+/*
+StudentWorld& Actor::getWorld() {
+	StudentWorld sw;
+	return sw;
+}
+*/
 void DiggerMan::move(StudentWorld * world)
 {
 	int value;
@@ -8,63 +13,68 @@ void DiggerMan::move(StudentWorld * world)
 	if (!isAlive())
 		return;
 	int x = getX(), y = getY();
+	Direction dir = getDirection();
 	switch (value)
 	{
 	case KEY_PRESS_LEFT:
-		if (x <= 0) {
-			break;
-		}
-		if (getDirection() != left) {
+
+		if (dir != left)
+		{
 			setDirection(left);
 			break;
 		}
+		if (x <= 0)	break;
+
 		moveTo(x - 1, y);
 		break;
-
 	case KEY_PRESS_RIGHT:
-		if (x >= 60) {
-			break;
-		}
-		if (getDirection() != right) {
+
+		if (dir != right)
+		{
 			setDirection(right);
 			break;
 		}
+		if (x >= 60) break;
+
 		moveTo(x + 1, y);
 		break;
-
 	case KEY_PRESS_DOWN:
-		if (y <= 0) {
-			break;
-		}
-		if (getDirection() != down) {
+
+		if (dir != down)
+		{
 			setDirection(down);
 			break;
 		}
+		if (y <= 0)	break;
+
 		moveTo(x, y - 1);
 		break;
-
 	case KEY_PRESS_UP:
-		if (y >= 60) {
-			break;
-		}
-		if (getDirection() != up) {
+
+		if (dir != up)
+		{
 			setDirection(up);
 			break;
 		}
+		if (y >= 60)break;
+
 		moveTo(x, y + 1);
 		break;
 	case KEY_PRESS_SPACE:
+		world->addProjectile(x, y, getDirection());
 		break;
 	}
 }
 /*
 void DiggerMan::doSomething()
 {
+	std::cout << "diggerman do something";
+	//getWorld();
 	int value;
 	if (!isAlive())
 		return;
 	int x = getX(), y = getY();
-	if (getWorld()->getKey(value) == true){
+	if (getWorld().getKey(value) == true){
 		switch (value)
 		{
 		case KEY_PRESS_DOWN:	moveTo(x, y - 1); break;
@@ -76,6 +86,8 @@ void DiggerMan::doSomething()
 		case KEY_PRESS_ESCAPE:;
 		}
 	}
+	
 }
 */
+
 // Students:  Add code to this file (if you wish), Actor.h, StudentWorld.h, and StudentWorld.cpp
