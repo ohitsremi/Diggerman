@@ -96,23 +96,22 @@ public:
 		//Do something with DiggerMan
 	}
 
-	void dig(int x, int y) //error "array subscript out of range????"
+	void dig(int minX, int minY)
 	{
-		int maxX = x + 3, maxY = y + 3;
-		
-		if (maxX > 59) maxX = 59;
-		if (maxY > 63) maxY = 63;
 		/*
-		if (dirt_field[maxX][maxY]->isVisible()) {
-			dirt_field[maxX][maxY]->setVisible(false);
+		if (dirt_field[d_x][d_y]->isVisible()) {
+			dirt_field[d_x][d_y]->setVisible(false);
 		}
 		*/
-		if (dirt_field[x][y])//returns true if not empty {
-			do {
-				do {
-					dirt_field[x][y].reset();
-				} while (y < maxY);
-			} while (x < maxX);
+		for (int d_x = minX; d_x < minX + 4; d_x++)
+		{
+			for (int d_y = minY; d_y < minY + 4; d_y++)
+			{
+				if (d_y < dirt_field[d_x].size())
+				{
+					dirt_field[d_x][d_y].reset();
+				}
+			}
 		}
 	}
 
@@ -131,6 +130,11 @@ public:
 			<< " Wtr: " << digger->getWater() << " Gld: " << digger->getGold()
 			<< " Sonar: " << digger->getSonar() << " Oil Left :" << oil << "Scr: " << getScore();
 		return display.str();
+	}
+
+	void addProjectile(int x, int y, GraphObject::Direction dir)
+	{
+		//Add implementation, use private data members
 	}
 
 private:
