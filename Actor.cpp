@@ -1,11 +1,6 @@
 #include "Actor.h"
 #include "StudentWorld.h"
-/*
-StudentWorld& Actor::getWorld() {
-StudentWorld sw;
-return sw;
-}
-*/
+
 void DiggerMan::move(StudentWorld * world)
 {
 	int value;
@@ -71,21 +66,21 @@ void DiggerMan::move(StudentWorld * world)
 	}
 }
 
-// Students:  Add code to this file (if you wish), Actor.h, StudentWorld.h, and StudentWorld.cpp
-
-void Projectile::doSomething()
+void Projectile::doSomething(StudentWorld * world)
 {
-	StudentWorld SW;
 	Direction d = getDirection();
 	int x = getX(), y = getY();
 
-	if (SW.checkDirtObstacle(x, y, d)) {
+	if (world->doesCollide(x, y, d))
+	{
 		setVisible(false);
+		isAlive = false;
 		return;
 	}
 	else if (distance == 4) //how far does the squirt travel
 	{
 		setVisible(false);
+		isAlive = false;
 		return;
 	}
 	else if (d == right)
@@ -108,4 +103,23 @@ void Projectile::doSomething()
 		distance++;
 		moveTo(x, y - 1);
 	}
+}
+
+void Oil::doSomething(StudentWorld * world)
+{
+	if (!isAlive)
+		return;
+	if (!isVisible() && world->isWithinDistance(this, 4))
+	{
+		setVisible(true);
+		return;
+	}
+	if (world->isWithinDistance(this, 3))
+	{
+		isAlive = false;
+		world->playSound(SOUND_FOUND_OIL);
+		world->increaseScore(1000);
+		world->decreaseOil();
+	}
+
 }
