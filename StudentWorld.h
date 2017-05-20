@@ -20,7 +20,7 @@ public:
 		: GameWorld(assetDir)
 	{
 	}
-	StudentWorld():GameWorld(""){}
+	StudentWorld() :GameWorld("") {}
 	virtual int init()
 	{
 		digger = std::make_shared<DiggerMan>();
@@ -81,7 +81,7 @@ public:
 		}
 		digger->move(this);
 		dig(digger->getX(), digger->getY());
-		
+
 		//decLives();
 		//return GWSTATUS_PLAYER_DIED;
 		return GWSTATUS_CONTINUE_GAME;
@@ -98,11 +98,6 @@ public:
 
 	void dig(int minX, int minY)
 	{
-		/*
-		if (dirt_field[d_x][d_y]->isVisible()) {
-			dirt_field[d_x][d_y]->setVisible(false);
-		}
-		*/
 		for (int d_x = minX; d_x < minX + 4; d_x++)
 		{
 			for (int d_y = minY; d_y < minY + 4; d_y++)
@@ -135,8 +130,24 @@ public:
 	void addProjectile(int x, int y, GraphObject::Direction dir)
 	{
 		//Add implementation, use private data members
+		if (dir == GraphObject::right)
+			x += 2;
+		else if (dir == GraphObject::left)
+			x -= 2;
+		else if (dir == GraphObject::up)
+			y += 2;
+		else if (dir == GraphObject::down)
+			y -= 2;
+		roster.emplace_back(std::make_shared<Projectile>(x, y, dir));
 	}
 
+	 bool checkObstacle(int x, int y)
+	{
+		if (dirt_field[x][y]->isVisible()==true){
+			return true;
+		}
+		return false;
+	}
 private:
 	std::vector<std::shared_ptr<Actor>> roster;	//maybe also have a 2d array of actor pointers
 	std::shared_ptr<DiggerMan> digger;
