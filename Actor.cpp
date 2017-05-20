@@ -2,8 +2,8 @@
 #include "StudentWorld.h"
 /*
 StudentWorld& Actor::getWorld() {
-	StudentWorld sw;
-	return sw;
+StudentWorld sw;
+return sw;
 }
 */
 void DiggerMan::move(StudentWorld * world)
@@ -65,29 +65,43 @@ void DiggerMan::move(StudentWorld * world)
 		break;
 	}
 }
-/*
-void DiggerMan::doSomething()
-{
-	std::cout << "diggerman do something";
-	//getWorld();
-	int value;
-	if (!isAlive())
-		return;
-	int x = getX(), y = getY();
-	if (getWorld().getKey(value) == true){
-		switch (value)
-		{
-		case KEY_PRESS_DOWN:	moveTo(x, y - 1); break;
-		case KEY_PRESS_UP:	moveTo(x, y + 1); break;
-		case KEY_PRESS_LEFT:	moveTo(x - 1, y); break;
-		case KEY_PRESS_RIGHT:	moveTo(x + 1, y); break;
-		case KEY_PRESS_SPACE:;
-		case KEY_PRESS_TAB:;
-		case KEY_PRESS_ESCAPE:;
-		}
-	}
-	
-}
-*/
 
 // Students:  Add code to this file (if you wish), Actor.h, StudentWorld.h, and StudentWorld.cpp
+
+void Projectile::doSomething()
+{
+	StudentWorld SW;
+	Direction d = getDirection();
+	int x = getX(), y = getY();
+/*
+	if (SW.checkObstacle(x, y)) {
+		return;
+	}
+
+	*/
+	if (distance == 6) //how far does the squirt travel
+	{
+		setVisible(false);
+		return;
+	}
+	else if (d == right)
+	{
+		distance++;
+		moveTo(x + 1, y);
+	}
+	else if (d == left)
+	{
+		distance++;
+		moveTo(x - 1, y);
+	}
+	else if (d == up)
+	{
+		distance++;
+		moveTo(x, y + 1);
+	}
+	else if (d == down)
+	{
+		distance++;
+		moveTo(x, y - 1);
+	}
+}
