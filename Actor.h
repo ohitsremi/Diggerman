@@ -8,16 +8,15 @@ class StudentWorld;
 class Actor : public GraphObject
 {
 public:
-	Actor(int ID, int x, int y, 
-		Direction dir = right, double s = 1.0, 
-		unsigned int d = 0) : GraphObject(ID, x, y, dir, s, d) { setVisible(true); }	//Does an object below not need to be set to visible?
+	Actor(int ID, int x, int y,
+		Direction dir, double s = 1.0,
+		unsigned int d = 0) : GraphObject(ID, x, y, dir, s, d) {
+		setVisible(true);
+	}	//Does an object below not need to be set to visible?
 	virtual void doSomething() = 0;
-	/*
-	StudentWorld *getWorld() {
-		StudentWorld* world_ptr = new ???; // Need to ask prof 
-		return world_ptr;
-	}
-	*/
+	
+	//StudentWorld& getWorld();
+	
 	virtual ~Actor() {}
 };
 
@@ -29,16 +28,17 @@ class DiggerMan : public Actor
 	bool m_sonar;
 public:
 	DiggerMan() : Actor(IMID_PLAYER, 30, 60, right, 1.0, 0), m_health(10), m_water(5), m_gold(0), m_sonar(true) {}	//Define sonar behavior
-	size_t getHealth()	{ return m_health; }
-	size_t getWater()	{ return m_water; }
-	size_t getGold()	{ return m_gold; }
-	bool getSonar()		{ return m_sonar; }
-	bool isAlive()		{ return m_health != 0; }
-	virtual void doSomething(/*const int & value*/)
+	size_t getHealth() { return m_health; }
+	size_t getWater() { return m_water; }
+	size_t getGold() { return m_gold; }
+	bool getSonar() { return m_sonar; }
+	bool isAlive() { return m_health != 0; }
+	void doSomething(/*const int & value*/)		
 	{
 		if (!isAlive())
+			//move(StudentWorld());
 			return;
-	}
+	}	
 	void move(StudentWorld*);
 	virtual ~DiggerMan() {}
 };
@@ -113,6 +113,7 @@ public:
 class Dirt : public Actor
 {
 public:
+	//Dirt() : Actor(IMID_DIRT, 0, 0, right, 0.25, 3) { setVisible(false); }
 	Dirt(int x, int y) : Actor(IMID_DIRT, x, y, right, 0.25, 3) {}
 	virtual void doSomething() override {}
 	virtual ~Dirt() {}
@@ -120,9 +121,11 @@ public:
 
 class Projectile : public Actor
 {
+	int distance=0;
 public:
-	Projectile(int x, int y) : Actor(IMID_WATER_SPURT, x, y) {}
-	virtual void doSomething() override {}
+	Projectile(int x, int y, Direction d) : Actor(IMID_WATER_SPURT, x, y, d, 1.0, 1) {}
+	bool isAlive = true;
+	void doSomething() override;
 	virtual ~Projectile() {}
 };
 #endif // ACTOR_H_
