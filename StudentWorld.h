@@ -8,6 +8,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <iomanip>
 #include <sstream>
 #include <algorithm>
 
@@ -44,7 +45,7 @@ public:
 			int x = std::rand() % 60;
 			int y = std::rand() % 56;
 			if (isSafeDistanceAway(x, y))
-				roster.emplace_back(std::make_shared<Gold>(x, y));
+				roster.emplace_back(std::make_shared<Gold>(x, y, Gold::pickup));
 			else
 				i--;
 		}
@@ -68,16 +69,18 @@ public:
 	virtual int move()
 	{
 		std::ostringstream display;
-		display << "Lvl: " << getLevel() << " Lives: " << getLives() << " HP: " << digger->getHealth()
-			<< " Wtr: " << digger->getWater() << " Gld: " << digger->getGold()
-			<< " Sonar: " << digger->getSonar() << " Oil Left :" << oilCount << " Scr: " << getScore();
+		display << std::setiosflags(std::ios::right);
+		display << "Lvl: " << std::setw(2) << getLevel() << "  Lives: " << std::setw(1) << getLives()
+			<< "  Hlth: " << std::setw(3) << digger->getHealth() * 10 << "%  Wtr: " << std::setw(2) << digger->getWater()
+			<< "  Gld: " << std::setw(2) << digger->getGold() << "  Sonar: " << std::setw(2) << digger->getSonar()
+			<< "  Oil Left :" << std::setw(2) << oilCount << "  Scr: " << std::setw(6) << std::setfill('0') << getScore();
 
 		setGameStatText(display.str());
 
 		for (std::shared_ptr<Actor> a : roster) {
 			a->doSomething(this);
 		}
-		digger->move(this);
+		digger->doSomething(this);
 		dig(digger->getX(), digger->getY());
 
 		//decLives();
@@ -90,18 +93,22 @@ public:
 	virtual void cleanUp()
 	{
 		roster.clear();
-		for (size_t r = 0; r < dirt_field.size(); r++)
-			for (size_t c = 0; c < dirt_field[r].size(); c++)
-				dirt_field[r][c].reset();
+		for (size_t x = 0; x < dirt_field.size(); x++)
+			for (size_t y = 0; y < dirt_field[x].size(); y++)
+				dirt_field[x][y].reset();
 		digger.reset();
 	}
 
-	void dig(int minX, int minY)
+	void dig(size_t minX, size_t minY)
 	{
-		for (int d_x = minX; d_x < minX + 4; d_x++)
-			for (int d_y = minY; d_y < minY + 4; d_y++)
-				if (d_y < dirt_field[d_x].size())
+		for (size_t d_x = minX; d_x < minX + 4; d_x++)
+			for (size_t d_y = minY; d_y < minY + 4; d_y++)
+				if (d_y < dirt_field[d_x].size() && dirt_field[d_x][d_y])
+				{
 					dirt_field[d_x][d_y].reset();
+					playSound(SOUND_DIG);
+				}
+					
 	}
 
 	void decreaseOil()
@@ -117,10 +124,20 @@ public:
 		return true;
 	}
 
+	bool isValid(int x, int y)
+	{
+		return x >= 0 && x < 64 && y >= 0 && y < 64;
+	}
+
 	//Opposite of isSafeDistanceAway, takes in a custom radius for now
 	bool isWithinDistance(Actor * a, int rad)
 	{
-		return	pow(abs(a->getX() - digger->getX()), 2) + pow(abs(a->getY() - digger->getY()), 2) <= pow(rad, 2);
+		return pow(abs(a->getX() - digger->getX()), 2) + pow(abs(a->getY() - digger->getY()), 2) <= pow(rad, 2);
+	}
+
+	void increaseGold()
+	{
+		digger->increaseGold();
 	}
 
 	std::string getStats(const int & oil)
@@ -149,20 +166,8 @@ public:
 	{
 		for (int i = 0; i < 4; i++)
 			for (int j = 0; j < 4; j++)
-			{
-				if (d == GraphObject::right)
-					if (dirt_field[x + i][y])
-						return true;
-				else if (d == GraphObject::left)
-					if (dirt_field[x - i][y])
-						return true;
-				else if (d == GraphObject::up)
-					if (dirt_field[x][y + j])
-						return true;
-				else if (d == GraphObject::down)
-					if (dirt_field[x][y - j])
-						return true;
-			 }
+				if (!isValid(x + i, y + j) || dirt_field[x + i][y + j])
+					return true;
 		return false;
 	}
 private:
