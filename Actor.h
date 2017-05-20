@@ -4,7 +4,7 @@
 #include "GraphObject.h"
 
 class StudentWorld;
-// Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
+
 class Actor : public GraphObject
 {
 public:
@@ -13,10 +13,7 @@ public:
 		unsigned int d = 0) : GraphObject(ID, x, y, dir, s, d) {
 		setVisible(true);
 	}	//Does an object below not need to be set to visible?
-	virtual void doSomething() = 0;
-	
-	//StudentWorld& getWorld();
-	
+	virtual void doSomething(StudentWorld *) = 0;
 	virtual ~Actor() {}
 };
 
@@ -33,10 +30,9 @@ public:
 	size_t getGold() { return m_gold; }
 	bool getSonar() { return m_sonar; }
 	bool isAlive() { return m_health != 0; }
-	void doSomething(/*const int & value*/)		
+	void doSomething(StudentWorld *) override	
 	{
 		if (!isAlive())
-			//move(StudentWorld());
 			return;
 	}	
 	void move(StudentWorld*);
@@ -49,7 +45,7 @@ class Protester : public Actor
 public:
 	Protester(int x, int y, int ID = IMID_PROTESTER) : Actor(ID, x, y, left, 1.0, 0), m_health(5) {}
 	size_t getHealth() { return m_health; }
-	virtual void doSomething() override {}
+	virtual void doSomething(StudentWorld *) override {}
 	virtual ~Protester() {}
 };
 
@@ -58,7 +54,7 @@ class HardcoreProtester : public Protester
 	size_t m_health;
 public:
 	HardcoreProtester(int x, int y) : Protester(x, y, IMID_HARD_CORE_PROTESTER), m_health(20) {}
-	virtual void doSomething() override {}
+	virtual void doSomething(StudentWorld *) override {}
 	virtual ~HardcoreProtester() {}
 };
 
@@ -66,7 +62,7 @@ class Goodie : public Actor
 {
 public:
 	Goodie(int ID, int x, int y) : Actor(ID, x, y, right, 1.0, 2) {}
-	virtual void doSomething() = 0;
+	virtual void doSomething(StudentWorld *) = 0;
 	virtual ~Goodie() {}
 };
 
@@ -74,7 +70,7 @@ class Sonar : public Goodie
 {
 public:
 	Sonar(int x, int y) : Goodie(IMID_SONAR, x, y) { setVisible(true); }
-	virtual void doSomething() override {}
+	virtual void doSomething(StudentWorld *) override {}
 	virtual ~Sonar() {}
 };
 
@@ -82,7 +78,7 @@ class Gold : public Goodie
 {
 public:
 	Gold(int x, int y) : Goodie(IMID_GOLD, x, y) {}
-	virtual void doSomething() override {}
+	virtual void doSomething(StudentWorld *) override {}
 	virtual ~Gold() {}
 };
 
@@ -90,15 +86,16 @@ class Water : public Goodie
 {
 public:
 	Water(int x, int y) : Goodie(IMID_WATER_POOL, x, y) { setVisible(true); }
-	virtual void doSomething() override {}
+	virtual void doSomething(StudentWorld *) override {}
 	virtual ~Water() {}
 };
 
 class Oil : public Goodie
 {
+	bool isAlive = true;
 public:
-	Oil(int x, int y) : Goodie(IMID_BARREL, x, y) { setVisible(true); }
-	virtual void doSomething() override {}
+	Oil(int x, int y) : Goodie(IMID_BARREL, x, y) { setVisible(false); }
+	virtual void doSomething(StudentWorld *) override;
 	virtual ~Oil() {}
 };
 
@@ -106,7 +103,7 @@ class Boulder : public Actor
 {
 public:
 	Boulder(int x, int y) : Actor(IMID_BOULDER, x, y, down, 1.0, 1) {}
-	virtual void doSomething() override {}
+	virtual void doSomething(StudentWorld *) override {}
 	virtual ~Boulder() {}
 };
 
@@ -115,17 +112,17 @@ class Dirt : public Actor
 public:
 	//Dirt() : Actor(IMID_DIRT, 0, 0, right, 0.25, 3) { setVisible(false); }
 	Dirt(int x, int y) : Actor(IMID_DIRT, x, y, right, 0.25, 3) {}
-	virtual void doSomething() override {}
+	virtual void doSomething(StudentWorld *) override {}
 	virtual ~Dirt() {}
 };
 
 class Projectile : public Actor
 {
 	int distance=0;
+	bool isAlive = true;
 public:
 	Projectile(int x, int y, Direction d) : Actor(IMID_WATER_SPURT, x, y, d, 1.0, 1) {}
-	bool isAlive = true;
-	void doSomething() override;
+	virtual void doSomething(StudentWorld *) override;
 	virtual ~Projectile() {}
 };
 #endif // ACTOR_H_
