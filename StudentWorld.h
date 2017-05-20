@@ -11,8 +11,6 @@
 #include <sstream>
 #include <algorithm>
 
-// Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
-
 class StudentWorld : public GameWorld
 {
 public:
@@ -59,7 +57,7 @@ public:
 			else
 				i--;
 		}
-		int oilCount = count_if(roster.begin(), roster.end(), [](std::shared_ptr<Actor> a)
+		oilCount = count_if(roster.begin(), roster.end(), [](std::shared_ptr<Actor> a)
 		{ return std::dynamic_pointer_cast<Oil>(a) != nullptr; }
 		);
 
@@ -69,10 +67,6 @@ public:
 
 	virtual int move()
 	{
-		int oilCount = count_if(roster.begin(), roster.end(), [](std::shared_ptr<Actor> a)
-		{ return std::dynamic_pointer_cast<Oil>(a) != nullptr; }
-		);
-
 		std::ostringstream display;
 		display << "Lvl: " << getLevel() << " Lives: " << getLives() << " HP: " << digger->getHealth()
 			<< " Wtr: " << digger->getWater() << " Gld: " << digger->getGold()
@@ -81,13 +75,15 @@ public:
 		setGameStatText(display.str());
 
 		for (std::shared_ptr<Actor> a : roster) {
-			a->doSomething();
+			a->doSomething(this);
 		}
 		digger->move(this);
 		dig(digger->getX(), digger->getY());
 
 		//decLives();
 		//return GWSTATUS_PLAYER_DIED;
+		if (oilCount == 0)
+			return GWSTATUS_FINISHED_LEVEL;
 		return GWSTATUS_CONTINUE_GAME;
 	}
 
@@ -97,21 +93,20 @@ public:
 		for (size_t r = 0; r < dirt_field.size(); r++)
 			for (size_t c = 0; c < dirt_field[r].size(); c++)
 				dirt_field[r][c].reset();
-		//Do something with DiggerMan
+		digger.reset();
 	}
 
 	void dig(int minX, int minY)
 	{
 		for (int d_x = minX; d_x < minX + 4; d_x++)
-		{
 			for (int d_y = minY; d_y < minY + 4; d_y++)
-			{
 				if (d_y < dirt_field[d_x].size())
-				{
 					dirt_field[d_x][d_y].reset();
-				}
-			}
-		}
+	}
+
+	void decreaseOil()
+	{
+		oilCount--;
 	}
 
 	bool isSafeDistanceAway(int x, int y)
@@ -120,6 +115,12 @@ public:
 			if (pow(abs(a->getX() - x), 2) + pow(abs(a->getY() - y), 2) <= 36 || !( y < 8 || (x < 26 || x > 33)))
 				return false;
 		return true;
+	}
+
+	//Opposite of isSafeDistanceAway, takes in a custom radius for now
+	bool isWithinDistance(Actor * a, int rad)
+	{
+		return	pow(abs(a->getX() - digger->getX()), 2) + pow(abs(a->getY() - digger->getY()), 2) <= pow(rad, 2);
 	}
 
 	std::string getStats(const int & oil)
@@ -133,7 +134,6 @@ public:
 
 	void addProjectile(int x, int y, GraphObject::Direction dir)
 	{
-		//Add implementation, use private data members
 		if (dir == GraphObject::right)
 			x += 4;
 		else if (dir == GraphObject::left)
@@ -145,29 +145,31 @@ public:
 		roster.emplace_back(std::make_shared<Projectile>(x, y, dir));
 	}
 
-	 bool checkDirtObstacle(int x, int y, GraphObject::Direction d)
+	bool doesCollide(int x, int y, GraphObject::Direction d)
 	{
-		 for (int i=0; i>4; i++)
-			 for (int j = 0; j > 4; j++) {
-				 if (d == GraphObject::right)
-					 if (dirt_field[x+i][y].get() == nullptr)
-						 return false;
-				 else if (d == GraphObject::left)
-					 if (dirt_field[x-i][y].get() == nullptr)
-						 return false;
-				 else if (d == GraphObject::up)
-					 if (dirt_field[x][y+j].get() == nullptr)
-						 return false;
-				 else if (d == GraphObject::down)
-					 if (dirt_field[x][y-j].get() == nullptr)
-						 return false;
+		for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 4; j++)
+			{
+				if (d == GraphObject::right)
+					if (dirt_field[x + i][y])
+						return true;
+				else if (d == GraphObject::left)
+					if (dirt_field[x - i][y])
+						return true;
+				else if (d == GraphObject::up)
+					if (dirt_field[x][y + j])
+						return true;
+				else if (d == GraphObject::down)
+					if (dirt_field[x][y - j])
+						return true;
 			 }
-		return true;
+		return false;
 	}
 private:
 	std::vector<std::shared_ptr<Actor>> roster;	//maybe also have a 2d array of actor pointers
 	std::shared_ptr<DiggerMan> digger;
 	std::array<std::array<std::unique_ptr<Dirt>, 64>, 64> dirt_field;  // modified to match his sample
+	int oilCount;
 };
 
 #endif // STUDENTWORLD_H_
