@@ -61,7 +61,12 @@ void DiggerMan::move(StudentWorld * world)
 		moveTo(x, y + 1);
 		break;
 	case KEY_PRESS_SPACE:
+		if (m_water == 0)
+			break;
+		else {
 		world->addProjectile(x, y, getDirection());
+		m_water--;
+		}
 		break;
 	}
 }
@@ -73,13 +78,12 @@ void Projectile::doSomething()
 	StudentWorld SW;
 	Direction d = getDirection();
 	int x = getX(), y = getY();
-/*
-	if (SW.checkObstacle(x, y)) {
+
+	if (SW.checkDirtObstacle(x, y, d)) {
+		setVisible(false);
 		return;
 	}
-
-	*/
-	if (distance == 6) //how far does the squirt travel
+	else if (distance == 4) //how far does the squirt travel
 	{
 		setVisible(false);
 		return;
