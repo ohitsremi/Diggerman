@@ -43,7 +43,7 @@ public:
 	Protester(int x, int y, int ID = IMID_PROTESTER) : Actor(ID, x, y, left, 1.0, 0), m_health(5) {}
 	size_t getHealth() { return m_health; }
 	virtual void doSomething(StudentWorld *) override;
-	virtual bool isAlive() override;
+	virtual bool isAlive() { return m_health != 0; };
 	virtual ~Protester() {}
 };
 
@@ -70,8 +70,8 @@ class Sonar : public Goodie
 {
 public:
 	Sonar(int x, int y) : Goodie(IMID_SONAR, x, y) { setVisible(true); }
-	virtual void doSomething(StudentWorld *) override;
-	virtual bool isAlive() override;
+	virtual void doSomething(StudentWorld *) override {};
+	virtual bool isAlive() { return isVisible(); };
 	virtual ~Sonar() {}
 };
 
@@ -84,7 +84,7 @@ public:
 		status == pickup ? setVisible(false) : setVisible(true);
 	}
 	virtual void doSomething(StudentWorld *) override;
-	virtual bool isAlive() override{ return alive; }
+	virtual bool isAlive() override { return alive; }
 	virtual ~Gold() {}
 private:
 	GoldState status;
@@ -95,8 +95,8 @@ class Water : public Goodie
 {
 public:
 	Water(int x, int y) : Goodie(IMID_WATER_POOL, x, y) { setVisible(true); }
-	virtual void doSomething(StudentWorld *) override;
-	virtual bool isAlive() override;
+	virtual void doSomething(StudentWorld *) override {};
+	virtual bool isAlive() override { return isVisible(); };
 	virtual ~Water() {}
 };
 
@@ -106,7 +106,7 @@ class Oil : public Goodie
 public:
 	Oil(int x, int y) : Goodie(IMID_BARREL, x, y) { setVisible(false); }
 	virtual void doSomething(StudentWorld *) override;
-	virtual bool isAlive() override{ return alive; }
+	virtual bool isAlive() override { return alive; }
 	virtual ~Oil() {}
 };
 
@@ -131,7 +131,7 @@ public:
 
 class Projectile : public Actor
 {
-	int distance=0;
+	int distance = 0;
 	bool alive = true;
 public:
 	Projectile(int x, int y, Direction d) : Actor(IMID_WATER_SPURT, x, y, d, 1.0, 1) {}
