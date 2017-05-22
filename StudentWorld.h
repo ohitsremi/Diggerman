@@ -33,9 +33,9 @@ public:
 			int y = std::rand() % 36 + 20;	//Between 20 and 56
 			if (isSafeDistanceAway(x, y)) {
 				roster.emplace_back(std::make_shared<Boulder>(x, y));
-				for(int i=0; i<4; i++)
-					for(int j=0; j<4; j++)
-					dirt_field[x+i][y+j].reset();
+				for (int i = 0; i<4; i++)
+					for (int j = 0; j<4; j++)
+						dirt_field[x + i][y + j].reset();
 			}
 			else
 				i--;
@@ -58,6 +58,7 @@ public:
 			else
 				i--;
 		}
+
 		oilCount = count_if(roster.begin(), roster.end(), [](std::shared_ptr<Actor> a)
 		{ return std::dynamic_pointer_cast<Oil>(a) != nullptr; }
 		);
@@ -83,6 +84,33 @@ public:
 		digger->doSomething(this);
 		dig(digger->getX(), digger->getY());
 
+		roster.emplace_back(std::make_shared<Protester>(60,60));
+		int T = std::max(25, 200 - (int)getLevel());
+		int P = std::min(15, 2 + (int)getLevel() * (int)1.5);
+
+
+
+		int G = getLevel() * 25 + 300;
+		int Gchance = std::rand() % G;
+		bool waterCheck = false;
+		if (rand() % G < 1) {
+			if (rand() % 5 < 4) {
+				while (waterCheck == false) {
+					int x = std::rand() % 60;
+					int y = std::rand() % 56;
+					if (!doesCollide(x, y)) {
+						waterCheck = true;
+						roster.emplace_back(std::make_shared<Water>(x, y));
+					}
+				}
+			}
+			else {
+				roster.emplace_back(std::make_shared<Sonar>(0, 60));
+			}
+		}
+
+
+		removeDeadGameObjects();
 		//decLives();
 		//return GWSTATUS_PLAYER_DIED;
 		if (oilCount == 0)
@@ -108,7 +136,7 @@ public:
 					dirt_field[d_x][d_y].reset();
 					playSound(SOUND_DIG);
 				}
-					
+
 	}
 
 	void decreaseOil()
@@ -119,7 +147,7 @@ public:
 	bool isSafeDistanceAway(int x, int y)
 	{
 		for (std::shared_ptr<Actor> a : roster)
-			if (pow(abs(a->getX() - x), 2) + pow(abs(a->getY() - y), 2) <= 36 || !( y < 8 || (x < 26 || x > 33)))
+			if (pow(abs(a->getX() - x), 2) + pow(abs(a->getY() - y), 2) <= 36 || !(y < 8 || (x < 26 || x > 33)))
 				return false;
 		return true;
 	}
@@ -162,13 +190,21 @@ public:
 		roster.emplace_back(std::make_shared<Projectile>(x, y, dir));
 	}
 
-	bool doesCollide(int x, int y, GraphObject::Direction d)
+	bool doesCollide(int x, int y)
 	{
 		for (int i = 0; i < 4; i++)
 			for (int j = 0; j < 4; j++)
 				if (!isValid(x + i, y + j) || dirt_field[x + i][y + j])
 					return true;
 		return false;
+	}
+
+	void removeDeadGameObjects() {
+		for (std::shared_ptr<Actor> a : roster) {
+			if (!a->isAlive()) {
+				a.reset();
+			}
+		}
 	}
 private:
 	std::vector<std::shared_ptr<Actor>> roster;	//maybe also have a 2d array of actor pointers
