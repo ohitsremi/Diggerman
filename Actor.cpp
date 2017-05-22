@@ -58,7 +58,7 @@ void DiggerMan::doSomething(StudentWorld * world)
 	case KEY_PRESS_SPACE:
 		if (m_water == 0)
 			break;
-		else 
+		else
 		{
 			world->addProjectile(x, y, getDirection());
 			world->playSound(SOUND_PLAYER_SQUIRT);	//This isn't working for some reason
@@ -74,7 +74,7 @@ void Projectile::doSomething(StudentWorld * world)
 	int x = getX(), y = getY();
 
 
-	if (world->doesCollide(x, y, d))
+	if (world->doesCollide(x, y))
 	{
 		setVisible(false);
 		alive = false;
@@ -108,6 +108,10 @@ void Projectile::doSomething(StudentWorld * world)
 	}
 }
 
+void Protester::doSomething(StudentWorld* world) 
+{
+
+}
 void Oil::doSomething(StudentWorld * world)
 {
 	if (!alive)
