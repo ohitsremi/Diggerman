@@ -108,7 +108,7 @@ void Projectile::doSomething(StudentWorld * world)
 	}
 }
 
-void Protester::doSomething(StudentWorld* world) 
+void Protester::doSomething(StudentWorld* world)
 {
 
 }
@@ -146,5 +146,35 @@ void Gold::doSomething(StudentWorld * world)
 		world->playSound(SOUND_GOT_GOODIE);
 		world->increaseScore(10);
 		world->increaseGold();
+	}
+}
+
+void Boulder::doSomething(StudentWorld * world)
+{
+
+	int x = getX(), y = getY();
+	if (!alive)
+		return;
+	if (!world->doesCollide(x, y - 1))
+	{
+		status = waiting;
+		if (status == waiting)
+			ticks++;
+		if (ticks >= 30)
+			status = falling;
+	}
+	if (status == falling)
+	{
+		
+		if (world->doesCollide(x, y))
+			status = dead;
+		else
+			moveTo(x, y - 1);
+			world->playSound(SOUND_FALLING_ROCK);
+	}
+	if (status == dead)
+	{
+		setVisible(false);
+		alive = false;
 	}
 }
