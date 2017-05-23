@@ -94,6 +94,7 @@ private:
 class Water : public Goodie
 {
 public:
+	/*enum WaterState{};*/
 	Water(int x, int y) : Goodie(IMID_WATER_POOL, x, y) { setVisible(true); }
 	virtual void doSomething(StudentWorld *) override {};
 	virtual bool isAlive() override { return isVisible(); };
@@ -112,12 +113,19 @@ public:
 
 class Boulder : public Actor
 {
-	bool alive = true;
 public:
-	Boulder(int x, int y) : Actor(IMID_BOULDER, x, y, down, 1.0, 1) {}
-	virtual void doSomething(StudentWorld *) override {}
+	enum BoulderState { stable, waiting, falling, dead };
+	int ticks = 0;
+	Boulder(int x, int y) : Actor(IMID_BOULDER, x, y, down, 1.0, 1) 
+	{
+		status = stable;
+	}
+	virtual void doSomething(StudentWorld *) override;
 	virtual bool isAlive() override { return alive; }
 	virtual ~Boulder() {}
+private:
+	BoulderState status;
+	bool alive = true;
 };
 
 class Dirt : public Actor
