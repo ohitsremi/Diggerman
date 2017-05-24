@@ -84,7 +84,7 @@ public:
 		digger->doSomething(this);
 		dig(digger->getX(), digger->getY());
 
-		roster.emplace_back(std::make_shared<Protester>(60,60));
+		roster.emplace_back(std::make_shared<Protester>(60, 60));
 		int T = std::max(25, 200 - (int)getLevel());
 		int P = std::min(15, 2 + (int)getLevel() * (int)1.5);
 
@@ -167,7 +167,10 @@ public:
 	{
 		digger->increaseGold();
 	}
-
+	void increaseWater()
+	{
+		digger->increaseWater();
+	}
 	std::string getStats(const int & oil)
 	{
 		std::ostringstream display;
