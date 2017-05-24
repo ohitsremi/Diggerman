@@ -178,3 +178,26 @@ void Boulder::doSomething(StudentWorld * world)
 		alive = false;
 	}
 }
+void Water::doSomething(StudentWorld * world)
+{
+	if (!alive)
+		return;
+	if (status == temporary)
+	{
+		ticks++;
+		int m = std::max(100, 300 - 10 * (int)world->getLevel());
+		if (ticks == m)
+		{
+			setVisible(false);
+			alive = false;
+		}
+	}
+	if (status == temporary && world->isWithinDistance(this, 3))
+	{
+		alive = false;
+		setVisible(false);
+		world->playSound(SOUND_GOT_GOODIE);
+		world->increaseScore(100);
+		world->increaseWater();
+	}
+}
