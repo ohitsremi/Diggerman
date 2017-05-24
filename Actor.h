@@ -32,6 +32,7 @@ public:
 	bool getSonar() { return m_sonar; }
 	bool isAlive() override { return m_health != 0; }
 	void increaseGold() { m_gold++; }
+	void increaseWater() { m_water += 5;}
 	void doSomething(StudentWorld *) override;
 	virtual ~DiggerMan() {}
 };
@@ -94,11 +95,19 @@ private:
 class Water : public Goodie
 {
 public:
-	/*enum WaterState{};*/
-	Water(int x, int y) : Goodie(IMID_WATER_POOL, x, y) { setVisible(true); }
-	virtual void doSomething(StudentWorld *) override {};
-	virtual bool isAlive() override { return isVisible(); };
+	enum WaterState {temporary};
+	int ticks = 0;
+	Water(int x, int y) : Goodie(IMID_WATER_POOL, x, y) 
+	{
+		status = temporary;
+		setVisible(true); 
+	}
+	virtual void doSomething(StudentWorld *) override;
+	virtual bool isAlive() override { return isVisible(); }
 	virtual ~Water() {}
+private:
+	WaterState status;
+	bool alive = true;
 };
 
 class Oil : public Goodie
