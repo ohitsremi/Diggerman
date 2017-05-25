@@ -155,22 +155,27 @@ void Boulder::doSomething(StudentWorld * world)
 	int x = getX(), y = getY();
 	if (!alive)
 		return;
-	if (!world->doesCollide(x, y - 1))
+	if (status == stable) {
+		if (!world->doesCollide(x, y - 1))
+		{
+			status = waiting;	
+		}
+	}
+	if (status == waiting) 
 	{
-		status = waiting;
-		if (status == waiting)
-			ticks++;
-		if (ticks >= 30)
+		ticks++;
+		if (ticks == 30)
+		{
 			status = falling;
+			world->playSound(SOUND_FALLING_ROCK);
+		}
 	}
 	if (status == falling)
 	{
-		
 		if (world->doesCollide(x, y))
 			status = dead;
 		else
 			moveTo(x, y - 1);
-			world->playSound(SOUND_FALLING_ROCK);
 	}
 	if (status == dead)
 	{
