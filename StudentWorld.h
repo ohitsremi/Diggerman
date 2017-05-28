@@ -79,16 +79,29 @@ public:
 		setGameStatText(display.str());
 
 		for (std::shared_ptr<Actor> a : roster) {
-			a->doSomething(this);
+			if(a->isAlive())
+				a->doSomething(this);
+			if (!digger->isAlive()) {
+				decLives();
+				return GWSTATUS_PLAYER_DIED;
+			}
 		}
 		digger->doSomething(this);
 		dig(digger->getX(), digger->getY());
 
-		roster.emplace_back(std::make_shared<Protester>(60, 60));
 		int T = std::max(25, 200 - (int)getLevel());
 		int P = std::min(15, 2 + (int)getLevel() * (int)1.5);
 
-
+		if (pRoster.size() < std::min(15, 2 + (int)(getLevel() * 1.5))){ //Starts off with 1 protester
+			if (ticks > T || pRoster.size() == 0) {
+				auto p = std::make_shared<Protester>(60, 60);
+				roster.emplace_back(p);
+				pRoster.emplace_back(p);
+				ticks = 0;
+			}
+			else
+				ticks++;
+	}
 
 		int G = getLevel() * 25 + 300;
 		int Gchance = std::rand() % G;
@@ -162,6 +175,20 @@ public:
 	{
 		return pow(abs(a->getX() - digger->getX()), 2) + pow(abs(a->getY() - digger->getY()), 2) <= pow(rad, 2);
 	}
+	bool isWithinDistanceOfProtester(Actor * a, int rad)
+	{
+		int v = 0;
+		for (std::shared_ptr<Protester> p : pRoster) {
+			if (pow(abs(a->getX() - p->getX()), 2) + pow(abs(a->getY() - p->getY()), 2) <= pow(rad, 2)) {
+					decPHealth(p.get());
+					v++;
+			}
+		}
+		if (v > 0)
+			return true;
+		else
+			return false;
+	}
 
 	void increaseGold()
 	{
@@ -170,6 +197,20 @@ public:
 	void increaseWater()
 	{
 		digger->increaseWater();
+	}
+	void decHealth() 
+	{
+		digger->decHealth();
+	}
+	void decPHealth(Protester * p)
+	{
+		if ((int)p->getHealth() > 0) {
+			playSound(SOUND_PROTESTER_ANNOYED);
+			p->decHealth();
+		}
+		else {
+			p->setLeave();
+		}
 	}
 	std::string getStats(const int & oil)
 	{
@@ -195,10 +236,10 @@ public:
 
 	bool doesCollide(int x, int y)
 	{
-		for (int i = 0; i < 4; i++)
-			for (int j = 0; j < 4; j++)
-				if (!isValid(x + i, y + j) || dirt_field[x + i][y + j])
-					return true;
+			for (int i = 0; i < 4; i++)
+				for (int j = 0; j < 4; j++)
+					if (!isValid(x + i, y + j) || dirt_field[x + i][y + j])
+						return true;
 		return false;
 	}
 
@@ -211,9 +252,11 @@ public:
 	}
 private:
 	std::vector<std::shared_ptr<Actor>> roster;	//maybe also have a 2d array of actor pointers
+	std::vector<std::shared_ptr<Protester>> pRoster;
 	std::shared_ptr<DiggerMan> digger;
 	std::array<std::array<std::unique_ptr<Dirt>, 64>, 64> dirt_field;  // modified to match his sample
 	int oilCount;
+	int ticks = 0;
 };
 
 #endif // STUDENTWORLD_H_
