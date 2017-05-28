@@ -80,6 +80,11 @@ void Projectile::doSomething(StudentWorld * world)
 		alive = false;
 		return;
 	}
+	if (world->isWithinDistanceOfProtester(this, 3)) {
+		setVisible(false);
+		alive = false;
+		return;
+	}
 	else if (distance == 4) //how far does the squirt travel
 	{
 		setVisible(false);
@@ -110,6 +115,33 @@ void Projectile::doSomething(StudentWorld * world)
 
 void Protester::doSomething(StudentWorld* world)
 {
+	if (!isAlive())
+		return;
+	int ticksToWaitBetweenMoves = std::max(0, 3 - (int)world->getLevel() / 4);
+	if (status == rest) {
+		ticks++;
+		if (ticks == ticksToWaitBetweenMoves)
+			status = active;
+		return;
+	}
+	else if (status == leave) {
+		world->playSound(SOUND_PROTESTER_GIVE_UP);
+		exitField();
+		setVisible(false);
+	}
+	else if (status == active) {
+		if (nonRestingTicks > 15) {
+			if (world->isWithinDistance(this, 4)) {
+				world->playSound(SOUND_PROTESTER_YELL);
+				world->decHealth();
+				nonRestingTicks = 0;
+			}
+		}
+		nonRestingTicks++;
+	}
+}
+
+void Protester::exitField() {
 
 }
 void Oil::doSomething(StudentWorld * world)
@@ -158,10 +190,10 @@ void Boulder::doSomething(StudentWorld * world)
 	if (status == stable) {
 		if (!world->doesCollide(x, y - 1))
 		{
-			status = waiting;	
+			status = waiting;
 		}
 	}
-	if (status == waiting) 
+	if (status == waiting)
 	{
 		ticks++;
 		if (ticks == 30)
