@@ -15,6 +15,7 @@ public:
 	}	//Does an object below not need to be set to visible?
 	virtual void doSomething(StudentWorld *) = 0;
 	virtual bool isAlive() = 0;
+	//virtual void decHealth() = 0;
 	virtual ~Actor() {}
 };
 
@@ -31,21 +32,30 @@ public:
 	size_t getGold() { return m_gold; }
 	bool getSonar() { return m_sonar; }
 	bool isAlive() override { return m_health != 0; }
+	void decHealth() { m_health -=2 ; }
 	void increaseGold() { m_gold++; }
-	void increaseWater() { m_water += 5;}
+	void increaseWater() { m_water += 5; }
 	void doSomething(StudentWorld *) override;
 	virtual ~DiggerMan() {}
 };
 
 class Protester : public Actor
 {
-	size_t m_health;
+	int ticks = 0;
+	int nonRestingTicks = 0;
 public:
-	Protester(int x, int y, int ID = IMID_PROTESTER) : Actor(ID, x, y, left, 1.0, 0), m_health(5) {}
+	Protester(int x, int y, int ID = IMID_PROTESTER) : Actor(ID, x, y, left, 1.0, 0), m_health(5) { status = rest; }
 	size_t getHealth() { return m_health; }
+	enum protesterState {rest, active, chase, leave };
 	virtual void doSomething(StudentWorld *) override;
-	virtual bool isAlive() { return m_health != 0; };
+	void setLeave() { status = leave; }
+	void exitField() ;
+	void decHealth() { m_health -= 2; }
+	virtual bool isAlive() { return isVisible(); };
 	virtual ~Protester() {}
+private:
+	size_t m_health;
+	protesterState status;
 };
 
 class HardcoreProtester : public Protester
@@ -95,12 +105,12 @@ private:
 class Water : public Goodie
 {
 public:
-	enum WaterState {temporary};
+	enum WaterState { temporary };
 	int ticks = 0;
-	Water(int x, int y) : Goodie(IMID_WATER_POOL, x, y) 
+	Water(int x, int y) : Goodie(IMID_WATER_POOL, x, y)
 	{
 		status = temporary;
-		setVisible(true); 
+		setVisible(true);
 	}
 	virtual void doSomething(StudentWorld *) override;
 	virtual bool isAlive() override { return isVisible(); }
@@ -125,7 +135,7 @@ class Boulder : public Actor
 public:
 	enum BoulderState { stable, waiting, falling, dead };
 	int ticks = 0;
-	Boulder(int x, int y) : Actor(IMID_BOULDER, x, y, down, 1.0, 1) 
+	Boulder(int x, int y) : Actor(IMID_BOULDER, x, y, down, 1.0, 1)
 	{
 		status = stable;
 	}
