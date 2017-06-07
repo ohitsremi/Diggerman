@@ -94,6 +94,7 @@ public:
 
 		if (pRoster.size() < std::min(15, 2 + (int)(getLevel() * 1.5))){ //Starts off with 1 protester
 			if (ticks > T || pRoster.size() == 0) {
+				//auto p = std::make_shared<Protester>(60, 60);
 				auto p = std::make_shared<Protester>(60, 60);
 				roster.emplace_back(p);
 				pRoster.emplace_back(p);
@@ -134,6 +135,7 @@ public:
 	virtual void cleanUp()
 	{
 		roster.clear();
+		pRoster.clear();
 		for (size_t x = 0; x < dirt_field.size(); x++)
 			for (size_t y = 0; y < dirt_field[x].size(); y++)
 				dirt_field[x][y].reset();
@@ -189,7 +191,41 @@ public:
 		else
 			return false;
 	}
+	bool isFallingOnProtester(Actor * b)
+	{
+		int v = 0;
+		for (std::shared_ptr<Protester> p : pRoster) {
+			if (pow(abs(b->getX() - p->getX()), 2) + pow(abs(b->getY() - p->getY()), 2) <= 4) {
+				protesterSetLeave(p.get());
+				v++;
+			}
+		}
+		if (v > 0)
+			return true;
+		else
+			return false;
+	}
 
+	bool diggermanAhead(Actor * a, int x, int y) {
+		int dx = digger->getX(), dy = digger->getY();
+			if (x < dx && y == dy && !doesCollide(x + 1, y)) {
+				a->setDirection(GraphObject::right);
+				return true;
+			}
+			if (x > dx && y == dy && !doesCollide(x - 1 , y)) {
+				a->setDirection(GraphObject::left);
+				return true;
+			}
+			if (x == dx && y > dy && !doesCollide(x , y - 1)) {
+				a->setDirection(GraphObject::down);
+				return true;
+			}
+			if (x == dx && y < dy && !doesCollide(x, y + 1)) {
+				a->setDirection(GraphObject::up);
+				return true;
+			}
+		return false;
+	}
 	void increaseGold()
 	{
 		digger->increaseGold();
@@ -207,10 +243,14 @@ public:
 		if ((int)p->getHealth() > 0) {
 			playSound(SOUND_PROTESTER_ANNOYED);
 			p->decHealth();
+			p->setStun();
 		}
 		else {
 			p->setLeave();
 		}
+	}
+	void protesterSetLeave(Protester * p) {
+		p->setLeave();
 	}
 	std::string getStats(const int & oil)
 	{
@@ -243,12 +283,70 @@ public:
 		return false;
 	}
 
+	bool exitPath(int x, int y) 
+	{
+		return false;
+	}
+
 	void removeDeadGameObjects() {
 		for (std::shared_ptr<Actor> a : roster) {
 			if (!a->isAlive()) {
 				a.reset();
 			}
 		}
+	}
+	int rangeRandomNumGenerator(int min, int max) {
+		int n = max - min + 1;
+		int remainder = RAND_MAX % n;
+		int x;
+		do {
+			x = rand();
+		} while (x >= RAND_MAX - remainder);
+		return min + x % n;
+	}
+	void randomDirection(Actor * a, int x, int y) 
+	{
+		int d;	
+		for (;;) {
+			d = rangeRandomNumGenerator(0, 4);
+			switch (d)
+			{
+			case 0: //right
+				if (!doesCollide(x + 1, y)) {
+					a->setDirection(GraphObject::right);
+					return;
+				}
+			case 1: // left
+				if (!doesCollide(x - 1, y)) {
+					a->setDirection(GraphObject::left);
+					return;
+				}
+			case 2: // up
+				if (!doesCollide(x , y + 1)) {
+					a->setDirection(GraphObject::up);
+					return;
+				}
+			case 3: // down
+				if (!doesCollide(x, y - 1)) {
+					a->setDirection(GraphObject::down);
+					return;
+				}
+			}
+		}
+	}
+	bool atIntersection(GraphObject::Direction d, int x, int y) 
+	{
+		if (d == GraphObject::left || d == GraphObject::right)
+		{
+			if (!doesCollide(x, y + 1) || !doesCollide(x, y - 1))
+				return true;
+		}
+		if (d == GraphObject::up || d == GraphObject::down)
+		{
+			if (!doesCollide(x + 1, y) || !doesCollide(x + 1, y))
+				return true;
+		}
+		return false;
 	}
 private:
 	std::vector<std::shared_ptr<Actor>> roster;	//maybe also have a 2d array of actor pointers
