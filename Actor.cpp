@@ -371,10 +371,10 @@ void Boulder::doSomething(StudentWorld * world)
 	if (status == stable) {
 		if (!world->doesCollide(x, y - 1))
 		{
-			status = waiting;	
+			status = waiting;
 		}
 	}
-	if (status == waiting) 
+	if (status == waiting)
 	{
 		ticks++;
 		if (ticks == 30)
@@ -387,6 +387,18 @@ void Boulder::doSomething(StudentWorld * world)
 	{
 		if (world->doesCollide(x, y))
 			status = dead;
+		if (world->isWithinDistanceOfProtester2(this, 3))
+		{
+			world->increaseScore(100);
+			setVisible(false);
+			alive = false;
+			return;
+		}
+		if (world->isWithinDistance(this, 3))
+		{
+			alive = false;
+			world->killDiggerman();
+		}
 		else
 			moveTo(x, y - 1);
 	}
@@ -419,3 +431,4 @@ void Water::doSomething(StudentWorld * world)
 		world->increaseWater();
 	}
 }
+
