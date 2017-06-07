@@ -22,24 +22,28 @@ public:
 	StudentWorld() :GameWorld("") {}
 	virtual int init()
 	{
+		//Populate game with Dirt
 		digger = std::make_shared<DiggerMan>();
 		for (size_t x = 0; x < dirt_field.size(); x++)
 			for (size_t y = 0; y < dirt_field[x].size(); y++)
 				if (y < 8 || (x < 30 || x > 33) && y < 60) // modified to match his sample
 					dirt_field[x][y] = std::make_unique<Dirt>(x, y);
+		//Populate game with boulders and clear Dirt objects in the way
 		for (int i = 0; i < std::min((int)getLevel() / 2 + 2, 7); i++)
 		{
 			int x = std::rand() % 60;
 			int y = std::rand() % 36 + 20;	//Between 20 and 56
-			if (isSafeDistanceAway(x, y)) {
+			if (isSafeDistanceAway(x, y)) 
+			{
 				roster.emplace_back(std::make_shared<Boulder>(x, y));
-				for (int i = 0; i<4; i++)
-					for (int j = 0; j<4; j++)
+				for (int i = 0; i < 4; i++)
+					for (int j = 0; j < 4; j++)
 						dirt_field[x + i][y + j].reset();
 			}
 			else
 				i--;
 		}
+		//Populate game with Gold which Diggerman can pick up
 		for (int i = 0; i < std::max(5 - ((int)getLevel() / 2), 2); i++)
 		{
 			int x = std::rand() % 60;
@@ -49,6 +53,7 @@ public:
 			else
 				i--;
 		}
+		//Populate game with Oil Barrels
 		for (int i = 0; i < std::min(2 + (int)getLevel(), 18); i++)
 		{
 			int x = std::rand() % 60;
@@ -58,7 +63,7 @@ public:
 			else
 				i--;
 		}
-
+		//Get initial count of boulders as calculated above
 		oilCount = count_if(roster.begin(), roster.end(), [](std::shared_ptr<Actor> a)
 		{ return std::dynamic_pointer_cast<Oil>(a) != nullptr; }
 		);
@@ -69,32 +74,35 @@ public:
 
 	virtual int move()
 	{
+		//Format and display game text
 		std::ostringstream display;
 		display << std::setiosflags(std::ios::right);
 		display << "Lvl: " << std::setw(2) << getLevel() << "  Lives: " << std::setw(1) << getLives()
 			<< "  Hlth: " << std::setw(3) << digger->getHealth() * 10 << "%  Wtr: " << std::setw(2) << digger->getWater()
 			<< "  Gld: " << std::setw(2) << digger->getGold() << "  Sonar: " << std::setw(2) << digger->getSonar()
 			<< "  Oil Left :" << std::setw(2) << oilCount << "  Scr: " << std::setw(6) << std::setfill('0') << getScore();
-
 		setGameStatText(display.str());
-
-		for (std::shared_ptr<Actor> a : roster) {
-			if(a->isAlive())
+		//Tell actors to do something if they are alive
+		for (std::shared_ptr<Actor> a : roster)
+		{
+			if (a->isAlive())
 				a->doSomething(this);
-			if (!digger->isAlive()) {
+			if (!digger->isAlive())
+			{
 				decLives();
 				return GWSTATUS_PLAYER_DIED;
 			}
 		}
 		digger->doSomething(this);
 		dig(digger->getX(), digger->getY());
-
+		//T is ticks passed since protester was added. P is maximum number of protesters allowed
 		int T = std::max(25, 200 - (int)getLevel());
 		int P = std::min(15, 2 + (int)getLevel() * (int)1.5);
-
-		if (pRoster.size() < std::min(15, 2 + (int)(getLevel() * 1.5))){ //Starts off with 1 protester
-			if (ticks > T || pRoster.size() == 0) {
-				//auto p = std::make_shared<Protester>(60, 60);
+		//Adds a protester as long as there is enough room and time has passed between them spawning in
+		if (pRoster.size() < P)
+		{
+			if (ticks > T || pRoster.size() == 0)
+			{
 				auto p = std::make_shared<Protester>(60, 60);
 				roster.emplace_back(p);
 				pRoster.emplace_back(p);
@@ -102,27 +110,28 @@ public:
 			}
 			else
 				ticks++;
-	}
-
+		}
+		//Spawn in either a Water or Sonar
 		int G = getLevel() * 25 + 300;
 		int Gchance = std::rand() % G;
-		bool waterCheck = false;
-		if (rand() % G < 1) {
-			if (rand() % 5 < 4) {
-				while (waterCheck == false) {
+		if (rand() % G < 1)
+		{
+			if (rand() % 5 < 4)
+			{
+				while (true)
+				{
 					int x = std::rand() % 60;
 					int y = std::rand() % 56;
-					if (!doesCollide(x, y)) {
-						waterCheck = true;
+					if (!doesCollide(x, y))
+					{
 						roster.emplace_back(std::make_shared<Water>(x, y));
+						break;
 					}
 				}
 			}
-			else {
+			else
 				roster.emplace_back(std::make_shared<Sonar>(0, 60));
-			}
 		}
-
 
 		removeDeadGameObjects();
 		//decLives();
@@ -151,12 +160,16 @@ public:
 					dirt_field[d_x][d_y].reset();
 					playSound(SOUND_DIG);
 				}
-
 	}
 
 	void decreaseOil()
 	{
 		oilCount--;
+	}
+
+	void increaseSonar()
+	{
+		digger->increaseSonar();
 	}
 
 	bool isSafeDistanceAway(int x, int y)
@@ -180,10 +193,12 @@ public:
 	bool isWithinDistanceOfProtester(Actor * a, int rad)
 	{
 		int v = 0;
-		for (std::shared_ptr<Protester> p : pRoster) {
-			if (pow(abs(a->getX() - p->getX()), 2) + pow(abs(a->getY() - p->getY()), 2) <= pow(rad, 2)) {
-					decPHealth(p.get());
-					v++;
+		for (std::shared_ptr<Protester> p : pRoster)
+		{
+			if (pow(abs(a->getX() - p->getX()), 2) + pow(abs(a->getY() - p->getY()), 2) <= pow(rad, 2))
+			{
+				decPHealth(p.get());
+				v++;
 			}
 		}
 		if (v > 0)
@@ -194,8 +209,10 @@ public:
 	bool isFallingOnProtester(Actor * b)
 	{
 		int v = 0;
-		for (std::shared_ptr<Protester> p : pRoster) {
-			if (pow(abs(b->getX() - p->getX()), 2) + pow(abs(b->getY() - p->getY()), 2) <= 4) {
+		for (std::shared_ptr<Protester> p : pRoster)
+		{
+			if (pow(abs(b->getX() - p->getX()), 2) + pow(abs(b->getY() - p->getY()), 2) <= 4)
+			{
 				protesterSetLeave(p.get());
 				v++;
 			}
@@ -205,25 +222,29 @@ public:
 		else
 			return false;
 	}
-
-	bool diggermanAhead(Actor * a, int x, int y) {
+	bool diggermanAhead(Actor * a, int x, int y)
+	{
 		int dx = digger->getX(), dy = digger->getY();
-			if (x < dx && y == dy && !doesCollide(x + 1, y)) {
-				a->setDirection(GraphObject::right);
-				return true;
-			}
-			if (x > dx && y == dy && !doesCollide(x - 1 , y)) {
-				a->setDirection(GraphObject::left);
-				return true;
-			}
-			if (x == dx && y > dy && !doesCollide(x , y - 1)) {
-				a->setDirection(GraphObject::down);
-				return true;
-			}
-			if (x == dx && y < dy && !doesCollide(x, y + 1)) {
-				a->setDirection(GraphObject::up);
-				return true;
-			}
+		if (x < dx && y == dy && !doesCollide(x + 1, y))
+		{
+			a->setDirection(GraphObject::right);
+			return true;
+		}
+		if (x > dx && y == dy && !doesCollide(x - 1, y))
+		{
+			a->setDirection(GraphObject::left);
+			return true;
+		}
+		if (x == dx && y > dy && !doesCollide(x, y - 1))
+		{
+			a->setDirection(GraphObject::down);
+			return true;
+		}
+		if (x == dx && y < dy && !doesCollide(x, y + 1))
+		{
+			a->setDirection(GraphObject::up);
+			return true;
+		}
 		return false;
 	}
 	void increaseGold()
@@ -234,22 +255,25 @@ public:
 	{
 		digger->increaseWater();
 	}
-	void decHealth() 
+	void decHealth()
 	{
 		digger->decHealth();
 	}
 	void decPHealth(Protester * p)
 	{
-		if ((int)p->getHealth() > 0) {
+		if ((int)p->getHealth() > 0)
+		{
 			playSound(SOUND_PROTESTER_ANNOYED);
 			p->decHealth();
 			p->setStun();
 		}
-		else {
+		else
+		{
 			p->setLeave();
 		}
 	}
-	void protesterSetLeave(Protester * p) {
+	void protesterSetLeave(Protester * p)
+	{
 		p->setLeave();
 	}
 	std::string getStats(const int & oil)
@@ -276,38 +300,38 @@ public:
 
 	bool doesCollide(int x, int y)
 	{
-			for (int i = 0; i < 4; i++)
-				for (int j = 0; j < 4; j++)
-					if (!isValid(x + i, y + j) || dirt_field[x + i][y + j])
-						return true;
+		for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 4; j++)
+				if (!isValid(x + i, y + j) || dirt_field[x + i][y + j])
+					return true;
 		return false;
 	}
 
-	bool exitPath(int x, int y) 
+	bool exitPath(int x, int y)
 	{
-		return false;
+		return false;	//Needs work
 	}
 
-	void removeDeadGameObjects() {
-		for (std::shared_ptr<Actor> a : roster) {
-			if (!a->isAlive()) {
-				a.reset();
-			}
-		}
+	void removeDeadGameObjects()
+	{
+		//It theoretically is possible for this to crash
+		for (int i = 0; i < roster.size(); i++)
+			if (!roster[i]->isAlive())
+				roster.erase(roster.begin() + i);
 	}
-	int rangeRandomNumGenerator(int min, int max) {
+	int rangeRandomNumGenerator(int min, int max)
+	{
 		int n = max - min + 1;
 		int remainder = RAND_MAX % n;
 		int x;
-		do {
-			x = rand();
-		} while (x >= RAND_MAX - remainder);
+		do { x = rand(); } while (x >= RAND_MAX - remainder);
 		return min + x % n;
 	}
-	void randomDirection(Actor * a, int x, int y) 
+	void randomDirection(Actor * a, int x, int y)
 	{
-		int d;	
-		for (;;) {
+		int d;
+		for (;;) 
+		{
 			d = rangeRandomNumGenerator(0, 4);
 			switch (d)
 			{
@@ -322,7 +346,7 @@ public:
 					return;
 				}
 			case 2: // up
-				if (!doesCollide(x , y + 1)) {
+				if (!doesCollide(x, y + 1)) {
 					a->setDirection(GraphObject::up);
 					return;
 				}
@@ -334,7 +358,7 @@ public:
 			}
 		}
 	}
-	bool atIntersection(GraphObject::Direction d, int x, int y) 
+	bool atIntersection(GraphObject::Direction d, int x, int y)
 	{
 		if (d == GraphObject::left || d == GraphObject::right)
 		{
