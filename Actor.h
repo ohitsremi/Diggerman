@@ -32,6 +32,7 @@ public:
 	size_t getSonar() { return m_sonar; }
 	bool isAlive() { return m_health != 0; }
 	void decHealth() { m_health -= 2; }
+	void killDiggerman() { m_health -= 10; }
 	void increaseSonar() { m_sonar += 2; }
 	void increaseGold() { m_gold++; }
 	void increaseWater() { m_water += 5; }
@@ -172,7 +173,7 @@ public:
 
 class Projectile : public Actor
 {
-	int distance=0;
+	int distance = 0;
 	bool alive = true;
 public:
 	Projectile(int x, int y, Direction d) : Actor(IMID_WATER_SPURT, x, y, d, 1.0, 1) {}
@@ -181,3 +182,4 @@ public:
 	virtual ~Projectile() {}
 };
 #endif // ACTOR_H_
+
