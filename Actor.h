@@ -2,6 +2,7 @@
 #define ACTOR_H_
 
 #include "GraphObject.h"
+#include <random>
 
 class StudentWorld;
 
@@ -43,19 +44,27 @@ class Protester : public Actor
 {
 	int ticks = 0;
 	int nonRestingTicks = 0;
+	int stunTicks = 0;
+	int nonShoutingTicks = 0;
+	int recentPerpTicks = 0;
+	bool recentPerpTurn = false;
 public:
-	Protester(int x, int y, int ID = IMID_PROTESTER) : Actor(ID, x, y, left, 1.0, 0), m_health(5) { status = rest; }
+	Protester(int x, int y, int ID = IMID_PROTESTER) : Actor(ID, x, y, left, 1.0, 0), m_health(5) { status = rest;}
 	size_t getHealth() { return m_health; }
-	enum protesterState {rest, active, chase, leave };
+	enum protesterState {rest, active, chase, leave, stunned };
 	virtual void doSomething(StudentWorld *) override;
 	void setLeave() { status = leave; }
 	void exitField() ;
 	void decHealth() { m_health -= 2; }
+	void setStun() { status = stunned; }
+	bool move(StudentWorld *world);
+
 	virtual bool isAlive() { return isVisible(); };
 	virtual ~Protester() {}
 private:
 	size_t m_health;
 	protesterState status;
+	int numSquaresToMoveInCurrentDirection=0;
 };
 
 class HardcoreProtester : public Protester
