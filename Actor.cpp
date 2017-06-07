@@ -1,6 +1,5 @@
 #include "Actor.h"
 #include "StudentWorld.h"
-#include <iostream>
 
 void DiggerMan::doSomething(StudentWorld * world)
 {
@@ -68,6 +67,28 @@ void DiggerMan::doSomething(StudentWorld * world)
 		break;
 	}
 }
+void Sonar::doSomething(StudentWorld * world)
+{
+	if (!alive)
+		return;
+	if (status == temporary)
+	{
+		ticks++;
+		int m = std::max(100, 300 - 10 * (int)world->getLevel());
+		if (ticks == m)
+		{
+			setVisible(false);
+			alive = false;
+		}
+	}
+	if (world->isWithinDistance(this, 3))
+	{
+		alive = false;
+		world->playSound(SOUND_GOT_GOODIE);
+		world->increaseScore(75);
+		world->increaseSonar();
+	}
+}
 
 void Projectile::doSomething(StudentWorld * world)
 {
@@ -81,7 +102,8 @@ void Projectile::doSomething(StudentWorld * world)
 		alive = false;
 		return;
 	}
-	if (world->isWithinDistanceOfProtester(this, 3)) {
+	if (world->isWithinDistanceOfProtester(this, 3))
+	{
 		world->increaseScore(100);
 		setVisible(false);
 		alive = false;
@@ -122,8 +144,9 @@ void Protester::doSomething(StudentWorld* world)
 		return;
 	int ticksToWaitBetweenMoves = std::max(0, 3 - (int)world->getLevel() / 4);
 	if (status == rest) //2 check for rest status
-	{		
-		if (ticks >= ticksToWaitBetweenMoves) {
+	{
+		if (ticks >= ticksToWaitBetweenMoves)
+		{
 			status = active;
 			ticks = 0;
 			return;
@@ -131,7 +154,7 @@ void Protester::doSomething(StudentWorld* world)
 		ticks++;
 		return;
 	}
-	
+
 	if (status == leave) //3 Check Leave status
 	{
 		world->playSound(SOUND_PROTESTER_GIVE_UP);
@@ -142,7 +165,8 @@ void Protester::doSomething(StudentWorld* world)
 	}
 	if (status == stunned) // Check Stunned status
 	{
-		if (stunTicks > std::max(50, 100 - (int)world->getLevel() * 10)) {
+		if (stunTicks > std::max(50, 100 - (int)world->getLevel() * 10))
+		{
 			status = active;
 			stunTicks = 0;
 			return;
@@ -153,9 +177,9 @@ void Protester::doSomething(StudentWorld* world)
 
 	if (status == active) // Check active status
 	{
-		if (nonRestingTicks > 15) 
-		{ 
-			if (nonShoutingTicks > 15) 
+		if (nonRestingTicks > 15)
+		{
+			if (nonShoutingTicks > 15)
 			{
 				if (world->isWithinDistance(this, 4)) // 4 If within distance of diggerman, shout at him
 				{
@@ -165,7 +189,7 @@ void Protester::doSomething(StudentWorld* world)
 					return;
 				}
 			}
-			else 
+			else
 				nonShoutingTicks++;
 		}
 		nonRestingTicks++;
@@ -198,20 +222,21 @@ void Protester::doSomething(StudentWorld* world)
 				return;
 			}
 		}
-		
+
 		if (!world->diggermanAhead(this, x, y)) // 6, can't see diggerman, then continue to walk
 		{
 			numSquaresToMoveInCurrentDirection--; //decrement
-			if (numSquaresToMoveInCurrentDirection <= 0) 
+			if (numSquaresToMoveInCurrentDirection <= 0)
 			{
 				numSquaresToMoveInCurrentDirection = world->rangeRandomNumGenerator(8, 60); // choose distance
 				world->randomDirection(this, x, y); //choose direction
 			}
 		}
-		
-		if (world->atIntersection(getDirection(), x, y)) 
+
+		if (world->atIntersection(getDirection(), x, y))
 		{
-			if (recentPerpTurn == true) {
+			if (recentPerpTurn == true)
+			{
 				if (recentPerpTicks > 200)
 				{
 					recentPerpTicks = 0;
@@ -257,16 +282,18 @@ void Protester::doSomething(StudentWorld* world)
 				}
 			}
 		}
-		
-		if (!move(world)) {
+
+		if (!move(world))
+		{
 			numSquaresToMoveInCurrentDirection = 0;
 			return;
 		}
-		
+
 	}
 }
 
-bool Protester::move(StudentWorld *world) {
+bool Protester::move(StudentWorld *world)
+{
 	Direction d = getDirection();
 	int x = getX(), y = getY();
 	if (d == right && !world->doesCollide(x + 1, y))
@@ -281,7 +308,7 @@ bool Protester::move(StudentWorld *world) {
 		status = rest;
 		return true;
 	}
-	if (d == up && !world->doesCollide(x , y + 1))
+	if (d == up && !world->doesCollide(x, y + 1))
 	{
 		moveTo(x, y + 1);
 		status = rest;
@@ -295,8 +322,9 @@ bool Protester::move(StudentWorld *world) {
 	}
 	return false;
 }
-void Protester::exitField() {
-	
+void Protester::exitField()
+{
+
 }
 void Oil::doSomething(StudentWorld * world)
 {
@@ -314,7 +342,6 @@ void Oil::doSomething(StudentWorld * world)
 		world->increaseScore(1000);
 		world->decreaseOil();
 	}
-
 }
 
 void Gold::doSomething(StudentWorld * world)
@@ -344,10 +371,10 @@ void Boulder::doSomething(StudentWorld * world)
 	if (status == stable) {
 		if (!world->doesCollide(x, y - 1))
 		{
-			status = waiting;
+			status = waiting;	
 		}
 	}
-	if (status == waiting)
+	if (status == waiting) 
 	{
 		ticks++;
 		if (ticks == 30)
@@ -358,9 +385,6 @@ void Boulder::doSomething(StudentWorld * world)
 	}
 	if (status == falling)
 	{
-		if (world->isFallingOnProtester(this)) {
-
-		}
 		if (world->doesCollide(x, y))
 			status = dead;
 		else
