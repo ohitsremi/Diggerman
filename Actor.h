@@ -2,7 +2,6 @@
 #define ACTOR_H_
 
 #include "GraphObject.h"
-#include <random>
 
 class StudentWorld;
 
@@ -16,7 +15,6 @@ public:
 	}	//Does an object below not need to be set to visible?
 	virtual void doSomething(StudentWorld *) = 0;
 	virtual bool isAlive() = 0;
-	//virtual void decHealth() = 0;
 	virtual ~Actor() {}
 };
 
@@ -25,15 +23,16 @@ class DiggerMan : public Actor
 	size_t m_health;
 	size_t m_water;
 	size_t m_gold;
-	bool m_sonar;
+	size_t m_sonar;
 public:
 	DiggerMan() : Actor(IMID_PLAYER, 30, 60, right, 1.0, 0), m_health(10), m_water(5), m_gold(0), m_sonar(true) {}	//Define sonar behavior
 	size_t getHealth() { return m_health; }
 	size_t getWater() { return m_water; }
 	size_t getGold() { return m_gold; }
-	bool getSonar() { return m_sonar; }
-	bool isAlive() override { return m_health != 0; }
-	void decHealth() { m_health -=2 ; }
+	size_t getSonar() { return m_sonar; }
+	bool isAlive() { return m_health != 0; }
+	void decHealth() { m_health -= 2; }
+	void increaseSonar() { m_sonar += 2; }
 	void increaseGold() { m_gold++; }
 	void increaseWater() { m_water += 5; }
 	void doSomething(StudentWorld *) override;
@@ -49,12 +48,12 @@ class Protester : public Actor
 	int recentPerpTicks = 0;
 	bool recentPerpTurn = false;
 public:
-	Protester(int x, int y, int ID = IMID_PROTESTER) : Actor(ID, x, y, left, 1.0, 0), m_health(5) { status = rest;}
+	Protester(int x, int y, int ID = IMID_PROTESTER) : Actor(ID, x, y, left, 1.0, 0), m_health(5) { status = rest; }
 	size_t getHealth() { return m_health; }
-	enum protesterState {rest, active, chase, leave, stunned };
+	enum protesterState { rest, active, chase, leave, stunned };
 	virtual void doSomething(StudentWorld *) override;
 	void setLeave() { status = leave; }
-	void exitField() ;
+	void exitField();
 	void decHealth() { m_health -= 2; }
 	void setStun() { status = stunned; }
 	bool move(StudentWorld *world);
@@ -64,7 +63,7 @@ public:
 private:
 	size_t m_health;
 	protesterState status;
-	int numSquaresToMoveInCurrentDirection=0;
+	int numSquaresToMoveInCurrentDirection = 0;
 };
 
 class HardcoreProtester : public Protester
@@ -72,8 +71,8 @@ class HardcoreProtester : public Protester
 	size_t m_health;
 public:
 	HardcoreProtester(int x, int y) : Protester(x, y, IMID_HARD_CORE_PROTESTER), m_health(20) {}
-	virtual void doSomething(StudentWorld *) override;
-	virtual bool isAlive() override;
+	bool isAlive() { return m_health != 0; }
+	virtual void doSomething(StudentWorld *) override {}
 	virtual ~HardcoreProtester() {}
 };
 
@@ -89,10 +88,15 @@ public:
 class Sonar : public Goodie
 {
 public:
-	Sonar(int x, int y) : Goodie(IMID_SONAR, x, y) { setVisible(true); }
-	virtual void doSomething(StudentWorld *) override {};
-	virtual bool isAlive() { return isVisible(); };
+	enum SonarState{ temporary };
+	Sonar(int x, int y) : Goodie(IMID_SONAR, x, y), status(temporary) { setVisible(true); }
+	virtual bool isAlive() { return alive; }
+	virtual void doSomething(StudentWorld *) override;
 	virtual ~Sonar() {}
+private:
+	SonarState status;
+	bool alive = true;
+	int ticks = 0;
 };
 
 class Gold : public Goodie
@@ -114,7 +118,7 @@ private:
 class Water : public Goodie
 {
 public:
-	enum WaterState { temporary };
+	enum WaterState{ temporary };
 	int ticks = 0;
 	Water(int x, int y) : Goodie(IMID_WATER_POOL, x, y)
 	{
@@ -127,6 +131,7 @@ public:
 private:
 	WaterState status;
 	bool alive = true;
+
 };
 
 class Oil : public Goodie
@@ -167,7 +172,7 @@ public:
 
 class Projectile : public Actor
 {
-	int distance = 0;
+	int distance=0;
 	bool alive = true;
 public:
 	Projectile(int x, int y, Direction d) : Actor(IMID_WATER_SPURT, x, y, d, 1.0, 1) {}
