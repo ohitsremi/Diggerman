@@ -1,5 +1,6 @@
 #include "Actor.h"
 #include "StudentWorld.h"
+#include <iostream>
 
 void DiggerMan::doSomething(StudentWorld * world)
 {
@@ -81,6 +82,7 @@ void Projectile::doSomething(StudentWorld * world)
 		return;
 	}
 	if (world->isWithinDistanceOfProtester(this, 3)) {
+		world->increaseScore(100);
 		setVisible(false);
 		alive = false;
 		return;
@@ -115,34 +117,186 @@ void Projectile::doSomething(StudentWorld * world)
 
 void Protester::doSomething(StudentWorld* world)
 {
-	if (!isAlive())
+	int x = getX(), y = getY();
+	if (!isAlive()) //1 check if alive
 		return;
 	int ticksToWaitBetweenMoves = std::max(0, 3 - (int)world->getLevel() / 4);
-	if (status == rest) {
-		ticks++;
-		if (ticks == ticksToWaitBetweenMoves)
+	if (status == rest) //2 check for rest status
+	{		
+		if (ticks >= ticksToWaitBetweenMoves) {
 			status = active;
+			ticks = 0;
+			return;
+		}
+		ticks++;
 		return;
 	}
-	else if (status == leave) {
+	
+	if (status == leave) //3 Check Leave status
+	{
 		world->playSound(SOUND_PROTESTER_GIVE_UP);
-		exitField();
+		//		std::array<std::array<bool, 64>, 64> exitP;
+		world->exitPath(x, y);
 		setVisible(false);
+		return;
 	}
-	else if (status == active) {
-		if (nonRestingTicks > 15) {
-			if (world->isWithinDistance(this, 4)) {
-				world->playSound(SOUND_PROTESTER_YELL);
-				world->decHealth();
-				nonRestingTicks = 0;
+	if (status == stunned) // Check Stunned status
+	{
+		if (stunTicks > std::max(50, 100 - (int)world->getLevel() * 10)) {
+			status = active;
+			stunTicks = 0;
+			return;
+		}
+		stunTicks++;
+		return;
+	}
+
+	if (status == active) // Check active status
+	{
+		if (nonRestingTicks > 15) 
+		{ 
+			if (nonShoutingTicks > 15) 
+			{
+				if (world->isWithinDistance(this, 4)) // 4 If within distance of diggerman, shout at him
+				{
+					world->playSound(SOUND_PROTESTER_YELL);
+					world->decHealth();
+					nonShoutingTicks = 0;
+					return;
+				}
 			}
+			else 
+				nonShoutingTicks++;
 		}
 		nonRestingTicks++;
+		recentPerpTicks++;
+		if (world->diggermanAhead(this, x, y)) // 5 If diggerman is ahead 
+		{
+			Direction d = getDirection(); // Face Diggerman and take 1 step toward
+			if (d == right) {
+				moveTo(x + 1, y);
+				status = rest;
+				numSquaresToMoveInCurrentDirection = 0;
+				return;
+			}
+			if (d == left) {
+				moveTo(x - 1, y);
+				status = rest;
+				numSquaresToMoveInCurrentDirection = 0;
+				return;
+			}
+			if (d == up) {
+				moveTo(x, y + 1);
+				status = rest;
+				numSquaresToMoveInCurrentDirection = 0;
+				return;
+			}
+			if (d == down) {
+				moveTo(x, y - 1);
+				status = rest;
+				numSquaresToMoveInCurrentDirection = 0;
+				return;
+			}
+		}
+		
+		if (!world->diggermanAhead(this, x, y)) // 6, can't see diggerman, then continue to walk
+		{
+			numSquaresToMoveInCurrentDirection--; //decrement
+			if (numSquaresToMoveInCurrentDirection <= 0) 
+			{
+				numSquaresToMoveInCurrentDirection = world->rangeRandomNumGenerator(8, 60); // choose distance
+				world->randomDirection(this, x, y); //choose direction
+			}
+		}
+		
+		if (world->atIntersection(getDirection(), x, y)) 
+		{
+			if (recentPerpTurn == true) {
+				if (recentPerpTicks > 200)
+				{
+					recentPerpTicks = 0;
+					recentPerpTurn = false;
+				}
+			}
+			if (recentPerpTurn == false)
+			{
+				Direction d = getDirection();
+				if (d == left || d == right)
+				{
+					recentPerpTurn = true;
+					numSquaresToMoveInCurrentDirection = world->rangeRandomNumGenerator(8, 60);
+					if (!world->doesCollide(x, y + 1) && !world->doesCollide(x, y - 1))
+					{
+						int n = world->rangeRandomNumGenerator(0, 1);
+						if (n == 0)
+							setDirection(up);
+						if (n == 1)
+							setDirection(down);
+					}
+					else if (!world->doesCollide(x, y + 1))
+						setDirection(up);
+					else if (!world->doesCollide(x, y - 1))
+						setDirection(down);
+				}
+				else if (d == up || d == down)
+				{
+					recentPerpTurn = false;
+					numSquaresToMoveInCurrentDirection = world->rangeRandomNumGenerator(8, 60);
+					if (!world->doesCollide(x + 1, y) && !world->doesCollide(x - 1, y))
+					{
+						int n = world->rangeRandomNumGenerator(0, 1);
+						if (n == 0)
+							setDirection(right);
+						if (n == 1)
+							setDirection(left);
+					}
+					else if (!world->doesCollide(x + 1, y))
+						setDirection(right);
+					else if (!world->doesCollide(x - 1, y))
+						setDirection(left);
+				}
+			}
+		}
+		
+		if (!move(world)) {
+			numSquaresToMoveInCurrentDirection = 0;
+			return;
+		}
+		
 	}
 }
 
+bool Protester::move(StudentWorld *world) {
+	Direction d = getDirection();
+	int x = getX(), y = getY();
+	if (d == right && !world->doesCollide(x + 1, y))
+	{
+		moveTo(x + 1, y);
+		status = rest;
+		return true;
+	}
+	if (d == left && !world->doesCollide(x - 1, y))
+	{
+		moveTo(x - 1, y);
+		status = rest;
+		return true;
+	}
+	if (d == up && !world->doesCollide(x , y + 1))
+	{
+		moveTo(x, y + 1);
+		status = rest;
+		return true;
+	}
+	if (d == down && !world->doesCollide(x, y - 1))
+	{
+		moveTo(x, y - 1);
+		status = rest;
+		return true;
+	}
+	return false;
+}
 void Protester::exitField() {
-
+	
 }
 void Oil::doSomething(StudentWorld * world)
 {
@@ -204,6 +358,9 @@ void Boulder::doSomething(StudentWorld * world)
 	}
 	if (status == falling)
 	{
+		if (world->isFallingOnProtester(this)) {
+
+		}
 		if (world->doesCollide(x, y))
 			status = dead;
 		else
