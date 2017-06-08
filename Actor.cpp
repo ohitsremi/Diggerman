@@ -56,6 +56,7 @@ void DiggerMan::doSomething(StudentWorld * world)
 		moveTo(x, y + 1);
 		break;
 	case KEY_PRESS_SPACE:
+
 		if (m_water == 0)
 			break;
 		else
@@ -86,7 +87,7 @@ void Sonar::doSomething(StudentWorld * world)
 		alive = false;
 		world->playSound(SOUND_GOT_GOODIE);
 		world->increaseScore(75);
-		world->increaseSonar();
+		world->diggerAction('s');
 	}
 }
 
@@ -184,7 +185,7 @@ void Protester::doSomething(StudentWorld* world)
 				if (world->isWithinDistance(this, 4)) // 4 If within distance of diggerman, shout at him
 				{
 					world->playSound(SOUND_PROTESTER_YELL);
-					world->decHealth();
+					world->diggerAction('d');
 					nonShoutingTicks = 0;
 					return;
 				}
@@ -358,7 +359,7 @@ void Gold::doSomething(StudentWorld * world)
 		alive = false;
 		world->playSound(SOUND_GOT_GOODIE);
 		world->increaseScore(10);
-		world->increaseGold();
+		world->diggerAction('g');
 	}
 }
 
@@ -387,7 +388,7 @@ void Boulder::doSomething(StudentWorld * world)
 	{
 		if (world->doesCollide(x, y))
 			status = dead;
-		if (world->isWithinDistanceOfProtester2(this, 3))
+		if (world->isWithinDistanceOfProtester(this, 3))
 		{
 			world->increaseScore(100);
 			setVisible(false);
@@ -397,7 +398,7 @@ void Boulder::doSomething(StudentWorld * world)
 		if (world->isWithinDistance(this, 3))
 		{
 			alive = false;
-			world->killDiggerman();
+			world->diggerAction('k');
 		}
 		else
 			moveTo(x, y - 1);
@@ -428,7 +429,6 @@ void Water::doSomething(StudentWorld * world)
 		setVisible(false);
 		world->playSound(SOUND_GOT_GOODIE);
 		world->increaseScore(100);
-		world->increaseWater();
+		world->diggerAction('w');
 	}
 }
-
