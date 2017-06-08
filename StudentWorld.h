@@ -315,7 +315,11 @@ public:
 		//It theoretically is possible for this to crash
 		for (size_t i = 0; i < roster.size(); i++)
 			if (!roster[i]->isAlive())
-				roster.erase(roster.begin() + i);
+				roster.erase(roster.begin() + i);			
+		for (size_t i = 0; i < pRoster.size(); i++) {
+			if (!pRoster[i]->isAlive())
+				pRoster.erase(pRoster.begin() + i);
+		}
 	}
 
 	int rangeRandomNumGenerator(int min, int max)
