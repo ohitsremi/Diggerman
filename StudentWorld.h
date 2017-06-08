@@ -95,18 +95,29 @@ public:
 		//T is ticks passed since protester was added. P is maximum number of protesters allowed
 		int T = std::max(25, 200 - (int)getLevel());
 		int P = std::min(15, 2 + (int)(getLevel() * 1.5));
+		int probabilityOfHardcore = std::min(90, (int)getLevel() * 10 + 30);
 		//Adds a protester as long as there is enough room and time has passed between them spawning in
 		if ((int)pRoster.size() < P)
 		{
-			if (ticks > T || pRoster.size() == 0)
+			if (pRoster.size() == 0 || ticks > T)
 			{
-				auto p = std::make_shared<Protester>(60, 60);
-				roster.emplace_back(p);
-				pRoster.emplace_back(p);
-				ticks = 0;
+				if (rand() % 100 < probabilityOfHardcore)
+				{
+					auto p = std::make_shared<HardcoreProtester>(60, 60);
+					roster.emplace_back(p);
+					pRoster.emplace_back(p);
+					ticks = 0;
+				}
+				else
+				{
+					auto p = std::make_shared<Protester>(60, 60);
+					roster.emplace_back(p);
+					pRoster.emplace_back(p);
+					ticks = 0;
+				}
 			}
-			else
-				ticks++;
+			
+			ticks++;
 		}
 		//Spawn in either a Water or Sonar
 		int G = getLevel() * 25 + 300;
@@ -315,7 +326,7 @@ public:
 		//It theoretically is possible for this to crash
 		for (size_t i = 0; i < roster.size(); i++)
 			if (!roster[i]->isAlive())
-				roster.erase(roster.begin() + i);			
+				roster.erase(roster.begin() + i);
 		for (size_t i = 0; i < pRoster.size(); i++) {
 			if (!pRoster[i]->isAlive())
 				pRoster.erase(pRoster.begin() + i);
