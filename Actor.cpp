@@ -388,7 +388,7 @@ void Boulder::doSomething(StudentWorld * world)
 	{
 		if (world->doesCollide(x, y))
 			status = dead;
-		if (world->isFallingOnProtester(this, 3))
+		if (world->isFallingOnProtester(this))
 		{
 			world->increaseScore(100);
 			setVisible(false);
