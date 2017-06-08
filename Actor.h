@@ -32,7 +32,7 @@ public:
 	size_t getSonar() { return m_sonar; }
 	bool isAlive() { return m_health != 0; }
 	void decHealth() { m_health -= 2; }
-	void killDiggerman() { m_health -= 10; }
+	void killDiggerMan() { m_health = 0; }
 	void increaseSonar() { m_sonar += 2; }
 	void increaseGold() { m_gold++; }
 	void increaseWater() { m_water += 5; }
