@@ -69,12 +69,21 @@ private:
 
 class HardcoreProtester : public Protester
 {
-	size_t m_health;
+	int ticks = 0;
+	int nonRestingTicks = 0;
+	int stunTicks = 0;
+	int nonShoutingTicks = 0;
+	int recentPerpTicks = 0;
+	bool recentPerpTurn = false;
 public:
 	HardcoreProtester(int x, int y) : Protester(x, y, IMID_HARD_CORE_PROTESTER), m_health(20) {}
 	bool isAlive() { return m_health != 0; }
-	virtual void doSomething(StudentWorld *) override {}
+	virtual void doSomething(StudentWorld *) override;
 	virtual ~HardcoreProtester() {}
+private:
+	size_t m_health;
+	protesterState status;
+	int numSquaresToMoveInCurrentDirection = 0;
 };
 
 class Goodie : public Actor
@@ -89,7 +98,7 @@ public:
 class Sonar : public Goodie
 {
 public:
-	enum SonarState{ temporary };
+	enum SonarState { temporary };
 	Sonar(int x, int y) : Goodie(IMID_SONAR, x, y), status(temporary) { setVisible(true); }
 	virtual bool isAlive() { return alive; }
 	virtual void doSomething(StudentWorld *) override;
@@ -119,7 +128,7 @@ private:
 class Water : public Goodie
 {
 public:
-	enum WaterState{ temporary };
+	enum WaterState { temporary };
 	int ticks = 0;
 	Water(int x, int y) : Goodie(IMID_WATER_POOL, x, y)
 	{
@@ -182,4 +191,3 @@ public:
 	virtual ~Projectile() {}
 };
 #endif // ACTOR_H_
-
