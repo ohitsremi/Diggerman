@@ -1,614 +1,195 @@
-#include "Actor.h"
-#include "StudentWorld.h"
+#ifndef ACTOR_H_
+#define ACTOR_H_
 
-void DiggerMan::doSomething(StudentWorld * world)
+#include "GraphObject.h"
+
+class StudentWorld;
+
+class Actor : public GraphObject
 {
-	int value;
-	world->getKey(value);
-	if (!isAlive())
-		return;
-	int x = getX(), y = getY();
-	Direction dir = getDirection();
-	switch (value)
-	{
-	case KEY_PRESS_LEFT:
-
-		if (dir != left)
-		{
-			setDirection(left);
-			break;
-		}
-		if (x <= 0)	break;
-
-		moveTo(x - 1, y);
-		break;
-	case KEY_PRESS_RIGHT:
-
-		if (dir != right)
-		{
-			setDirection(right);
-			break;
-		}
-		if (x >= 60) break;
-
-		moveTo(x + 1, y);
-		break;
-	case KEY_PRESS_DOWN:
-
-		if (dir != down)
-		{
-			setDirection(down);
-			break;
-		}
-		if (y <= 0)	break;
-
-		moveTo(x, y - 1);
-		break;
-	case KEY_PRESS_UP:
-
-		if (dir != up)
-		{
-			setDirection(up);
-			break;
-		}
-		if (y >= 60)	break;
-
-		moveTo(x, y + 1);
-		break;
-	case KEY_PRESS_SPACE:
-
-		if (m_water == 0)
-			break;
-		else
-		{
-			world->addProjectile(x, y, getDirection());
-			world->playSound(SOUND_PLAYER_SQUIRT);	//This isn't working for some reason
-			m_water--;
-		}
-		break;
-	case KEY_PRESS_TAB:
-		if (m_gold > 0) 
-		{
-			world->dropGold(x, y);
-			m_gold--;
-		}
-		else
-			break;
-	}
-	
-}
-void Sonar::doSomething(StudentWorld * world)
-{
-	if (!alive)
-		return;
-	if (status == temporary)
-	{
-		ticks++;
-		int m = std::max(100, 300 - 10 * (int)world->getLevel());
-		if (ticks == m)
-		{
-			setVisible(false);
-			alive = false;
-		}
-	}
-	if (world->isWithinDistance(this, 3))
-	{
-		alive = false;
-		world->playSound(SOUND_GOT_GOODIE);
-		world->increaseScore(75);
-		world->diggerAction('s');
-	}
-}
-
-void Projectile::doSomething(StudentWorld * world)
-{
-	Direction d = getDirection();
-	int x = getX(), y = getY();
-
-
-	if (world->doesCollide(x, y))
-	{
-		setVisible(false);
-		alive = false;
-		return;
-	}
-	if (world->isShootingProtester(this, 3))
-	{
-		world->increaseScore(100);
-		setVisible(false);
-		alive = false;
-		return;
-	}
-	else if (distance == 4) //how far does the squirt travel
-	{
-		setVisible(false);
-		alive = false;
-		return;
-	}
-	else if (d == right)
-	{
-		distance++;
-		moveTo(x + 1, y);
-	}
-	else if (d == left)
-	{
-		distance++;
-		moveTo(x - 1, y);
-	}
-	else if (d == up)
-	{
-		distance++;
-		moveTo(x, y + 1);
-	}
-	else if (d == down)
-	{
-		distance++;
-		moveTo(x, y - 1);
-	}
-}
-
-void Protester::doSomething(StudentWorld* world)
-{
-	int x = getX(), y = getY();
-	if (!isAlive()) //1 check if alive
-		return;
-	int ticksToWaitBetweenMoves = std::max(0, 3 - (int)world->getLevel() / 4);
-	if (status == rest) //2 check for rest status
-	{
-		if (ticks >= ticksToWaitBetweenMoves)
-		{
-			status = active;
-			ticks = 0;
-			return;
-		}
-		ticks++;
-		return;
-	}
-
-	if (status == leave) //3 Check Leave status
-	{
-		//		std::array<std::array<bool, 64>, 64> exitP;
-		world->exitPath(x, y);
-		setVisible(false);
-		return;
-	}
-	if (status == stunned) // Check Stunned status
-	{
-		if (stunTicks > std::max(50, 100 - (int)world->getLevel() * 10))
-		{
-			status = active;
-			stunTicks = 0;
-			return;
-		}
-		stunTicks++;
-		return;
-	}
-
-	if (status == active) // Check active status
-	{
-		if (nonRestingTicks > 15)
-		{
-			if (nonShoutingTicks > 15)
-			{
-				if (world->isWithinDistance(this, 4)) // 4 If within distance of diggerman, shout at him
-				{
-					world->playSound(SOUND_PROTESTER_YELL);
-					world->diggerAction('d');
-					nonShoutingTicks = 0;
-					return;
-				}
-			}
-			else
-				nonShoutingTicks++;
-		}
-		nonRestingTicks++;
-		recentPerpTicks++;
-		if (world->diggermanAhead(this, x, y)) // 5 If diggerman is ahead 
-		{
-			Direction d = getDirection(); // Face Diggerman and take 1 step toward
-			if (d == right) {
-				moveTo(x + 1, y);
-				status = rest;
-				numSquaresToMoveInCurrentDirection = 0;
-				return;
-			}
-			if (d == left) {
-				moveTo(x - 1, y);
-				status = rest;
-				numSquaresToMoveInCurrentDirection = 0;
-				return;
-			}
-			if (d == up) {
-				moveTo(x, y + 1);
-				status = rest;
-				numSquaresToMoveInCurrentDirection = 0;
-				return;
-			}
-			if (d == down) {
-				moveTo(x, y - 1);
-				status = rest;
-				numSquaresToMoveInCurrentDirection = 0;
-				return;
-			}
-		}
-
-		if (!world->diggermanAhead(this, x, y)) // 6, can't see diggerman, then continue to walk
-		{
-			numSquaresToMoveInCurrentDirection--; //decrement
-			if (numSquaresToMoveInCurrentDirection <= 0)
-			{
-				numSquaresToMoveInCurrentDirection = world->rangeRandomNumGenerator(8, 60); // choose distance
-				world->randomDirection(this, x, y); //choose direction
-			}
-		}
-
-		if (world->atIntersection(getDirection(), x, y))
-		{
-			if (recentPerpTurn == true)
-			{
-				if (recentPerpTicks > 200)
-				{
-					recentPerpTicks = 0;
-					recentPerpTurn = false;
-				}
-			}
-			if (recentPerpTurn == false)
-			{
-				Direction d = getDirection();
-				if (d == left || d == right)
-				{
-					recentPerpTurn = true;
-					numSquaresToMoveInCurrentDirection = world->rangeRandomNumGenerator(8, 60);
-					if (!world->doesCollide(x, y + 1) && !world->doesCollide(x, y - 1))
-					{
-						int n = world->rangeRandomNumGenerator(0, 1);
-						if (n == 0)
-							setDirection(up);
-						if (n == 1)
-							setDirection(down);
-					}
-					else if (!world->doesCollide(x, y + 1))
-						setDirection(up);
-					else if (!world->doesCollide(x, y - 1))
-						setDirection(down);
-				}
-				else if (d == up || d == down)
-				{
-					recentPerpTurn = false;
-					numSquaresToMoveInCurrentDirection = world->rangeRandomNumGenerator(8, 60);
-					if (!world->doesCollide(x + 1, y) && !world->doesCollide(x - 1, y))
-					{
-						int n = world->rangeRandomNumGenerator(0, 1);
-						if (n == 0)
-							setDirection(right);
-						if (n == 1)
-							setDirection(left);
-					}
-					else if (!world->doesCollide(x + 1, y))
-						setDirection(right);
-					else if (!world->doesCollide(x - 1, y))
-						setDirection(left);
-				}
-			}
-		}
-
-		if (!move(world))
-		{
-			numSquaresToMoveInCurrentDirection = 0;
-			return;
-		}
-
-	}
-}
-
-void HardcoreProtester::doSomething(StudentWorld* world)
-{
-	int x = getX(), y = getY();
-	if (!isAlive()) //1 check if alive
-		return;
-	int ticksToWaitBetweenMoves = std::max(0, 3 - (int)world->getLevel() / 4);
-	if (status == rest) //2 check for rest status
-	{
-		if (ticks >= ticksToWaitBetweenMoves)
-		{
-			status = active;
-			ticks = 0;
-			return;
-		}
-		ticks++;
-		return;
-	}
-
-	if (status == leave) //3 Check Leave status
-	{
-		world->playSound(SOUND_PROTESTER_GIVE_UP);
-		//		std::array<std::array<bool, 64>, 64> exitP;
-		world->exitPath(x, y);
-		setVisible(false);
-		return;
-	}
-	if (status == stunned) // Check Stunned status
-	{
-		if (stunTicks > std::max(50, 100 - (int)world->getLevel() * 10))
-		{
-			status = active;
-			stunTicks = 0;
-			return;
-		}
-		stunTicks++;
-		return;
-	}
-
-	if (status == active) // Check active status
-	{
-		if (nonRestingTicks > 15)
-		{
-			if (nonShoutingTicks > 15)
-			{
-				if (world->isWithinDistance(this, 4)) // 4 If within distance of diggerman, shout at him
-				{
-					world->playSound(SOUND_PROTESTER_YELL);
-					world->diggerAction('d');
-					nonShoutingTicks = 0;
-					return;
-				}
-			}
-			else
-				nonShoutingTicks++;
-		}
-		nonRestingTicks++;
-		recentPerpTicks++;
-		if (world->diggermanAhead(this, x, y)) // 5 If diggerman is ahead 
-		{
-			Direction d = getDirection(); // Face Diggerman and take 1 step toward
-			if (d == right) {
-				moveTo(x + 1, y);
-				status = rest;
-				numSquaresToMoveInCurrentDirection = 0;
-				return;
-			}
-			if (d == left) {
-				moveTo(x - 1, y);
-				status = rest;
-				numSquaresToMoveInCurrentDirection = 0;
-				return;
-			}
-			if (d == up) {
-				moveTo(x, y + 1);
-				status = rest;
-				numSquaresToMoveInCurrentDirection = 0;
-				return;
-			}
-			if (d == down) {
-				moveTo(x, y - 1);
-				status = rest;
-				numSquaresToMoveInCurrentDirection = 0;
-				return;
-			}
-		}
-
-		if (!world->diggermanAhead(this, x, y)) // 6, can't see diggerman, then continue to walk
-		{
-			numSquaresToMoveInCurrentDirection--; //decrement
-			if (numSquaresToMoveInCurrentDirection <= 0)
-			{
-				numSquaresToMoveInCurrentDirection = world->rangeRandomNumGenerator(8, 60); // choose distance
-				world->randomDirection(this, x, y); //choose direction
-			}
-		}
-
-		if (world->atIntersection(getDirection(), x, y))
-		{
-			if (recentPerpTurn == true)
-			{
-				if (recentPerpTicks > 200)
-				{
-					recentPerpTicks = 0;
-					recentPerpTurn = false;
-				}
-			}
-			if (recentPerpTurn == false)
-			{
-				Direction d = getDirection();
-				if (d == left || d == right)
-				{
-					recentPerpTurn = true;
-					numSquaresToMoveInCurrentDirection = world->rangeRandomNumGenerator(8, 60);
-					if (!world->doesCollide(x, y + 1) && !world->doesCollide(x, y - 1))
-					{
-						int n = world->rangeRandomNumGenerator(0, 1);
-						if (n == 0)
-							setDirection(up);
-						if (n == 1)
-							setDirection(down);
-					}
-					else if (!world->doesCollide(x, y + 1))
-						setDirection(up);
-					else if (!world->doesCollide(x, y - 1))
-						setDirection(down);
-				}
-				else if (d == up || d == down)
-				{
-					recentPerpTurn = false;
-					numSquaresToMoveInCurrentDirection = world->rangeRandomNumGenerator(8, 60);
-					if (!world->doesCollide(x + 1, y) && !world->doesCollide(x - 1, y))
-					{
-						int n = world->rangeRandomNumGenerator(0, 1);
-						if (n == 0)
-							setDirection(right);
-						if (n == 1)
-							setDirection(left);
-					}
-					else if (!world->doesCollide(x + 1, y))
-						setDirection(right);
-					else if (!world->doesCollide(x - 1, y))
-						setDirection(left);
-				}
-			}
-		}
-
-		if (!move(world))
-		{
-			numSquaresToMoveInCurrentDirection = 0;
-			return;
-		}
-
-	}
-}
-
-bool Protester::move(StudentWorld *world)
-{
-	Direction d = getDirection();
-	int x = getX(), y = getY();
-	if (d == right && !world->doesCollide(x + 1, y))
-	{
-		moveTo(x + 1, y);
-		status = rest;
-		return true;
-	}
-	if (d == left && !world->doesCollide(x - 1, y))
-	{
-		moveTo(x - 1, y);
-		status = rest;
-		return true;
-	}
-	if (d == up && !world->doesCollide(x, y + 1))
-	{
-		moveTo(x, y + 1);
-		status = rest;
-		return true;
-	}
-	if (d == down && !world->doesCollide(x, y - 1))
-	{
-		moveTo(x, y - 1);
-		status = rest;
-		return true;
-	}
-	return false;
-}
-void Protester::exitField()
-{
-
-}
-void Oil::doSomething(StudentWorld * world)
-{
-	if (!alive)
-		return;
-	if (!isVisible() && world->isWithinDistance(this, 4))
-	{
+public:
+	Actor(int ID, int x, int y,
+		Direction dir, double s = 1.0,
+		unsigned int d = 0) : GraphObject(ID, x, y, dir, s, d) {
 		setVisible(true);
-		return;
-	}
-	if (world->isWithinDistance(this, 3))
-	{
-		alive = false;
-		world->playSound(SOUND_FOUND_OIL);
-		world->increaseScore(1000);
-		world->decreaseOil();
-	}
-}
+	}	//Does an object below not need to be set to visible?
+	virtual void doSomething(StudentWorld *) = 0;
+	virtual bool isAlive() = 0;
+	virtual ~Actor() {}
+};
 
-void Gold::doSomething(StudentWorld * world)
+class DiggerMan : public Actor
 {
-	if (!alive)
-		return;
-	if (isVisible() && world->isWithinDistance(this, 4))
+	size_t m_health;
+	size_t m_water;
+	size_t m_gold;
+	size_t m_sonar;
+public:
+	DiggerMan() : Actor(IMID_PLAYER, 30, 60, right, 1.0, 0), m_health(10), m_water(5), m_gold(0), m_sonar(true) {}	//Define sonar behavior
+	size_t getHealth() { return m_health; }
+	size_t getWater() { return m_water; }
+	size_t getGold() { return m_gold; }
+	size_t getSonar() { return m_sonar; }
+	bool isAlive() { return m_health != 0; }
+	void dropGold() { m_gold -= 1; }
+	void decHealth() { m_health -= 2; }
+	void killDiggerMan() { m_health = 0; }
+	void increaseSonar() { m_sonar += 2; }
+	void increaseGold() { m_gold++; }
+	void increaseWater() { m_water += 5; }
+	void doSomething(StudentWorld *) override;
+	virtual ~DiggerMan() {}
+};
+
+class Protester : public Actor
+{
+	int ticks = 0;
+	int nonRestingTicks = 0;
+	int stunTicks = 0;
+	int nonShoutingTicks = 0;
+	int recentPerpTicks = 0;
+	bool recentPerpTurn = false;
+public:
+	Protester(int x, int y, int ID = IMID_PROTESTER) : Actor(ID, x, y, left, 1.0, 0), m_health(5) { status = rest; }
+	size_t getHealth() { return m_health; }
+	enum protesterState { rest, active, chase, leave, stunned };
+	void doSomething(StudentWorld *) override;
+	void setLeave() { status = leave; }
+	void exitField();
+	void decHealth() { m_health -= 2; }
+	void setStun() { status = stunned; }
+	bool move(StudentWorld *world);
+
+	virtual bool isAlive() { return isVisible(); };
+	virtual ~Protester() {}
+private:
+	size_t m_health;
+	protesterState status;
+	int numSquaresToMoveInCurrentDirection = 0;
+};
+
+class HardcoreProtester : public Protester
+{
+	size_t m_health;
+	protesterState status;
+	int ticks = 0;
+	int nonRestingTicks = 0;
+	int stunTicks = 0;
+	int nonShoutingTicks = 0;
+	int recentPerpTicks = 0;
+	bool recentPerpTurn = false;
+	int numSquaresToMoveInCurrentDirection = 0;
+public:
+	HardcoreProtester(int x, int y) : Protester(x, y, IMID_HARD_CORE_PROTESTER), m_health(20) {}
+	bool isAlive() { return m_health != 0; }
+	virtual void doSomething(StudentWorld *) override;
+	virtual ~HardcoreProtester() {}
+};
+
+class Goodie : public Actor
+{
+public:
+	Goodie(int ID, int x, int y) : Actor(ID, x, y, right, 1.0, 2) {}
+	virtual void doSomething(StudentWorld *) = 0;
+	virtual bool isAlive() = 0;
+	virtual ~Goodie() {}
+};
+
+class Sonar : public Goodie
+{
+public:
+	enum SonarState { temporary };
+	Sonar(int x, int y) : Goodie(IMID_SONAR, x, y), status(temporary) { setVisible(true); }
+	virtual bool isAlive() { return alive; }
+	virtual void doSomething(StudentWorld *) override;
+	virtual ~Sonar() {}
+private:
+	SonarState status;
+	bool alive = true;
+	int ticks = 0;
+};
+
+class Gold : public Goodie
+{
+public:
+	enum GoldState { none, pickup, dropped };
+	Gold(int x, int y, GoldState g) : Goodie(IMID_GOLD, x, y), status(g)
 	{
+		status == pickup ? setVisible(false) : setVisible(true);
+	}
+	virtual void doSomething(StudentWorld *) override;
+	virtual bool isAlive() override { return alive; }
+	virtual ~Gold() {}
+private:
+	GoldState status;
+	bool alive = true;
+	int ticks = 0;
+};
+
+class Water : public Goodie
+{
+public:
+	enum WaterState { temporary };
+	int ticks = 0;
+	Water(int x, int y) : Goodie(IMID_WATER_POOL, x, y)
+	{
+		status = temporary;
 		setVisible(true);
-		return;
 	}
-	if (status == dropped)
-	{
-		ticks++;
-		if (world->isWithinDistanceOfProtester(this, 3))
-		{
-			alive = false;
-			setVisible(false);
-			world->playSound(SOUND_PROTESTER_FOUND_GOLD);
-			world->bribeProtester(this);
-			world->increaseScore(25);
-		}
-		if (ticks > 100)
-		{
-			alive = false;
-			setVisible(false);
-		}
-	}
-	if (status == pickup && world->isWithinDistance(this, 3))
-	{
-		alive = false;
-		world->playSound(SOUND_GOT_GOODIE);
-		world->increaseScore(10);
-		world->diggerAction('g');
-	}
-}
+	virtual void doSomething(StudentWorld *) override;
+	virtual bool isAlive() override { return isVisible(); }
+	virtual ~Water() {}
+private:
+	WaterState status;
+	bool alive = true;
 
-void Boulder::doSomething(StudentWorld * world)
-{
+};
 
-	int x = getX(), y = getY();
-	if (!alive)
-		return;
-	if (status == stable) {
-		if (!world->doesCollide(x, y - 1))
-		{
-			status = waiting;
-		}
-	}
-	if (status == waiting)
-	{
-		ticks++;
-		if (ticks == 30)
-		{
-			status = falling;
-			world->playSound(SOUND_FALLING_ROCK);
-		}
-	}
-	if (status == falling)
-	{
-		if (world->doesCollide(x, y))
-			status = dead;
-		if (world->isFallingOnProtester(this))
-		{
-			world->increaseScore(100);
-			setVisible(false);
-			alive = false;
-			return;
-		}
-		if (world->isWithinDistance(this, 3))
-		{
-			alive = false;
-			world->diggerAction('k');
-		}
-		else
-			moveTo(x, y - 1);
-	}
-	if (status == dead)
-	{
-		setVisible(false);
-		alive = false;
-	}
-}
-void Water::doSomething(StudentWorld * world)
+class Oil : public Goodie
 {
-	if (!alive)
-		return;
-	if (status == temporary)
+	bool alive = true;
+public:
+	Oil(int x, int y) : Goodie(IMID_BARREL, x, y) { setVisible(false); }
+	virtual void doSomething(StudentWorld *) override;
+	virtual bool isAlive() override { return alive; }
+	virtual ~Oil() {}
+};
+
+class Boulder : public Actor
+{
+public:
+	enum BoulderState { stable, waiting, falling, dead };
+	int ticks = 0;
+	Boulder(int x, int y) : Actor(IMID_BOULDER, x, y, down, 1.0, 1)
 	{
-		ticks++;
-		int m = std::max(100, 300 - 10 * (int)world->getLevel());
-		if (ticks == m)
-		{
-			setVisible(false);
-			alive = false;
-		}
+		status = stable;
 	}
-	if (status == temporary && world->isWithinDistance(this, 3))
-	{
-		alive = false;
-		setVisible(false);
-		world->playSound(SOUND_GOT_GOODIE);
-		world->increaseScore(100);
-		world->diggerAction('w');
-	}
-}
+	virtual void doSomething(StudentWorld *) override;
+	virtual bool isAlive() override { return alive; }
+	virtual ~Boulder() {}
+private:
+	BoulderState status;
+	bool alive = true;
+};
+
+class Dirt : public Actor
+{
+public:
+	Dirt(int x, int y) : Actor(IMID_DIRT, x, y, right, 0.25, 3) {}
+	virtual void doSomething(StudentWorld *) override {}
+	virtual bool isAlive() override { return false; }
+	virtual ~Dirt() {}
+};
+
+class Projectile : public Actor
+{
+	int distance = 0;
+	bool alive = true;
+public:
+	Projectile(int x, int y, Direction d) : Actor(IMID_WATER_SPURT, x, y, d, 1.0, 1) {}
+	virtual void doSomething(StudentWorld *) override;
+	virtual bool isAlive() override { return alive; }
+	virtual ~Projectile() {}
+};
+#endif // ACTOR_H_
+
