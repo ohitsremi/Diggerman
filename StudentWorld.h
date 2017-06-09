@@ -199,6 +199,22 @@ public:
 		{
 			if (pow(abs(a->getX() - p->getX()), 2) + pow(abs(a->getY() - p->getY()), 2) <= pow(rad, 2))
 			{
+				v++;
+			}
+		}
+		if (v > 0)
+			return true;
+		else
+			return false;
+	}
+
+	bool isShootingProtester(Actor * a, int rad)
+	{
+		int v = 0;
+		for (std::shared_ptr<Protester> p : pRoster)
+		{
+			if (pow(abs(a->getX() - p->getX()), 2) + pow(abs(a->getY() - p->getY()), 2) <= pow(rad, 2))
+			{
 				decPHealth(p.get());
 				v++;
 			}
@@ -275,6 +291,7 @@ public:
 		}
 		else
 		{
+			playSound(SOUND_PROTESTER_GIVE_UP);
 			p->setLeave();
 		}
 	}
