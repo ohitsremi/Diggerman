@@ -184,4 +184,3 @@ public:
 	virtual ~Projectile() {}
 };
 #endif // ACTOR_H_
-
