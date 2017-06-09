@@ -95,29 +95,18 @@ public:
 		//T is ticks passed since protester was added. P is maximum number of protesters allowed
 		int T = std::max(25, 200 - (int)getLevel());
 		int P = std::min(15, 2 + (int)(getLevel() * 1.5));
-		int probabilityOfHardcore = std::min(90, (int)getLevel() * 10 + 30);
 		//Adds a protester as long as there is enough room and time has passed between them spawning in
 		if ((int)pRoster.size() < P)
 		{
-			if (pRoster.size() == 0 || ticks > T)
+			if (ticks > T || pRoster.size() == 0)
 			{
-				if (rand() % 100 < probabilityOfHardcore)
-				{
-					auto p = std::make_shared<HardcoreProtester>(60, 60);
-					roster.emplace_back(p);
-					pRoster.emplace_back(p);
-					ticks = 0;
-				}
-				else
-				{
-					auto p = std::make_shared<Protester>(60, 60);
-					roster.emplace_back(p);
-					pRoster.emplace_back(p);
-					ticks = 0;
-				}
+				auto p = std::make_shared<Protester>(60, 60);
+				roster.emplace_back(p);
+				pRoster.emplace_back(p);
+				ticks = 0;
 			}
-			
-			ticks++;
+			else
+				ticks++;
 		}
 		//Spawn in either a Water or Sonar
 		int G = getLevel() * 25 + 300;
@@ -280,6 +269,16 @@ public:
 		}
 	}
 
+	void bribeProtester(Gold * g) {
+		for (std::shared_ptr<Protester> p : pRoster)
+		{
+			if (isWithinDistanceOfProtester(g, 3)) {
+				p->setLeave();
+				return;
+			}
+
+		}
+	}
 	void protesterSetLeave(Protester * p)
 	{
 		p->setLeave();
@@ -306,7 +305,10 @@ public:
 			y -= 4;
 		roster.emplace_back(std::make_shared<Projectile>(x, y, dir));
 	}
-
+	void dropGold(int x, int y)
+	{
+		roster.emplace_back(std::make_shared<Gold>(x, y, Gold::GoldState::dropped));
+	}
 	bool doesCollide(int x, int y)
 	{
 		for (int i = 0; i < 4; i++)
