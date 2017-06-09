@@ -31,6 +31,7 @@ public:
 	size_t getGold() { return m_gold; }
 	size_t getSonar() { return m_sonar; }
 	bool isAlive() { return m_health != 0; }
+	void dropGold() { m_gold -= 1; }
 	void decHealth() { m_health -= 2; }
 	void killDiggerMan() { m_health = 0; }
 	void increaseSonar() { m_sonar += 2; }
@@ -69,21 +70,12 @@ private:
 
 class HardcoreProtester : public Protester
 {
-	int ticks = 0;
-	int nonRestingTicks = 0;
-	int stunTicks = 0;
-	int nonShoutingTicks = 0;
-	int recentPerpTicks = 0;
-	bool recentPerpTurn = false;
+	size_t m_health;
 public:
 	HardcoreProtester(int x, int y) : Protester(x, y, IMID_HARD_CORE_PROTESTER), m_health(20) {}
 	bool isAlive() { return m_health != 0; }
-	virtual void doSomething(StudentWorld *) override;
+	virtual void doSomething(StudentWorld *) override {}
 	virtual ~HardcoreProtester() {}
-private:
-	size_t m_health;
-	protesterState status;
-	int numSquaresToMoveInCurrentDirection = 0;
 };
 
 class Goodie : public Actor
@@ -123,6 +115,7 @@ public:
 private:
 	GoldState status;
 	bool alive = true;
+	int ticks = 0;
 };
 
 class Water : public Goodie
@@ -191,3 +184,4 @@ public:
 	virtual ~Projectile() {}
 };
 #endif // ACTOR_H_
+
