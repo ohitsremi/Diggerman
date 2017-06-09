@@ -67,7 +67,7 @@ void DiggerMan::doSomething(StudentWorld * world)
 		}
 		break;
 	case KEY_PRESS_TAB:
-		if (m_gold > 0) 
+		if (m_gold > 0)
 		{
 			world->dropGold(x, y);
 			m_gold--;
@@ -75,7 +75,7 @@ void DiggerMan::doSomething(StudentWorld * world)
 		else
 			break;
 	}
-	
+
 }
 void Sonar::doSomething(StudentWorld * world)
 {
@@ -112,7 +112,7 @@ void Projectile::doSomething(StudentWorld * world)
 		alive = false;
 		return;
 	}
-	if (world->isWithinDistanceOfProtester(this, 3))
+	if (world->isShootingProtester(this, 3))
 	{
 		world->increaseScore(100);
 		setVisible(false);
