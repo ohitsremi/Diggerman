@@ -167,7 +167,6 @@ void Protester::doSomething(StudentWorld* world)
 
 	if (status == leave) //3 Check Leave status
 	{
-		world->playSound(SOUND_PROTESTER_GIVE_UP);
 		//		std::array<std::array<bool, 64>, 64> exitP;
 		world->exitPath(x, y);
 		setVisible(false);
